@@ -1,4 +1,4 @@
 PROGRAM IS
 IN
-    WRITE 0;
+    WRITE 69;
 END

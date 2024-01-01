@@ -9,8 +9,8 @@
 #include <value.hpp>
 #include <rvalue.hpp>
 #include <lvalue.hpp>
-#include <lvalue-var.hpp>
-#include <lvalue-array.hpp>
+#include <lvalue_var.hpp>
+#include <lvalue_array.hpp>
 
 // C like functions for YACC / FLEX
 static void yyerror(const char *msg);
@@ -39,10 +39,9 @@ static Compiler compiler;
     #include <value.hpp>
     #include <rvalue.hpp>
     #include <lvalue.hpp>
-    #include <lvalue-var.hpp>
-    #include <lvalue-array.hpp>
+    #include <lvalue_var.hpp>
+    #include <lvalue_array.hpp>
     #include <loop.hpp>
-    #include <loop-for.hpp>
 
     typedef struct Parser_token
     {
@@ -73,26 +72,28 @@ static Compiler compiler;
 %token	YY_PIDENTIFIER YY_NUM
 %token	YY_ERROR
 
-%token	<ptoken>    YY_SEMICOLON YY_COMMA
-%token 	<ptoken>    YY_ADD YY_SUB YY_DIV YY_MOD YY_MUL
-%token	<ptoken>    YY_ASSIGN
-%token	<ptoken>    YY_EQ YY_NE YY_LT YY_GT YY_LE YY_GE
-%token	<ptoken>    YY_PROGRAM YY_PROCEDURE YY_IS YY_IN YY_END
-%token	<ptoken>    YY_READ YY_WRITE
-%token	<ptoken>    YY_WHILE YY_DO YY_ENDWHILE
-%token  <ptoken>    YY_REPEAT YY_UNTIL
-%token	<ptoken>    YY_IF YY_THEN YY_ELSE YY_ENDIF
-%token	<ptoken>    YY_L_BRACKET YY_R_BRACKET
-%token  <ptoken>    YY_TABLE YY_L_SQUARE_BRACKET YY_R_SQUARE_BRACKET
-%token	<ptoken>    YY_PIDENTIFIER YY_NUM
-%token	<ptoken>    YY_ERROR
+%type   <ptoken>    YY_SEMICOLON YY_COMMA
+%type   <ptoken> 	YY_ADD YY_SUB YY_DIV YY_MOD YY_MUL
+%type   <ptoken>	YY_ASSIGN
+%type   <ptoken>	YY_EQ YY_NE YY_LT YY_GT YY_LE YY_GE
+%type   <ptoken>	YY_PROGRAM YY_PROCEDURE YY_IS YY_IN YY_END
+%type   <ptoken>	YY_READ YY_WRITE
+%type   <ptoken>	YY_WHILE YY_DO YY_ENDWHILE
+%type   <ptoken>    YY_REPEAT YY_UNTIL
+%type   <ptoken>	YY_IF YY_THEN YY_ELSE YY_ENDIF
+%type   <ptoken>	YY_L_BRACKET YY_R_BRACKET
+%type   <ptoken>    YY_TABLE YY_L_SQUARE_BRACKET YY_R_SQUARE_BRACKET
+%type   <ptoken>	YY_PIDENTIFIER YY_NUM
+%type   <ptoken>	YY_ERROR
+
+%type   <value>     value
 
 %%
 
 program_all:
     procedures main
     {
-
+        compiler.getAsmGenerator().finishProgram();
     }
 ;
 
@@ -184,7 +185,7 @@ commands:
 ;
 
 command:
-    identifier YY_ASSIGN expr YY_SEMICOLON
+    identifier YY_ASSIGN expression YY_SEMICOLON
     {
 
     }
@@ -214,7 +215,8 @@ command:
     }
     | YY_WRITE value YY_SEMICOLON
     {
-
+        compiler.getAsmGenerator().write(*$2);
+        delete $2;
     }
 ;
 
@@ -380,7 +382,7 @@ condition:
 value:
     YY_NUM
     {
-
+        $$ = new Rvalue($1.val);
     }
     | identifier
     {
@@ -410,17 +412,17 @@ static void yyerror(const char* msg)
     std::cerr << "BLAD: " << msg << " w linii " << yylval.ptoken.line << std::endl;
 }
 
-int compile(const char* in_file, const char* out_file)
+int compile(const char* inFile, const char* outFile)
 {
-    yyin = fopen(in_file, "r");
+    yyin = fopen(inFile, "r");
     const int ret = yyparse();
     fclose(yyin);
 
     std::ofstream outstream;
-    outstream.open(out_file);
+    outstream.open(outFile);
 
-    compiler.get_asm_generator().finish_code_generation();
-    const std::string code = compiler.get_asm_generator().get_generated_code();
+    compiler.getAsmGenerator().finishCodeGeneration();
+    const std::string code = compiler.getAsmGenerator().getGeneratedCode();
 
     outstream << code << std::endl;
 

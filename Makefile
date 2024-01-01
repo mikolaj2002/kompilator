@@ -28,7 +28,7 @@ endif
 ifeq ("$(origin DEBUG)", "command line")
 	GGDB := -ggdb3
 else
-	GGDB :=
+	GGDB := -ggdb3
 endif
 
 CXX_FLAGS += $(CXX_STD) $(CXX_OPT) $(GGDB) $(CXX_WARNS)
