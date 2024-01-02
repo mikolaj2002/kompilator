@@ -1,4 +1,8 @@
 PROGRAM IS
+    a, b, res
 IN
-    WRITE 69;
+    READ a;
+    READ b;
+    res := a * b;
+    WRITE res;
 END

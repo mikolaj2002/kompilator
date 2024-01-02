@@ -45,11 +45,12 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 34 "./src/parser.y"
+#line 35 "./src/parser.y"
 
     #include <cstdint>
     #include <cstring>
 
+    #include <architecture.hpp>
     #include <compiler.hpp>
     #include <value.hpp>
     #include <rvalue.hpp>
@@ -66,7 +67,7 @@ extern int yydebug;
     } Parser_token;
 
 
-#line 70 "./inc/parser_tab.h"
+#line 71 "./inc/parser_tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -123,12 +124,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 56 "./src/parser.y"
+#line 58 "./src/parser.y"
 
     Parser_token ptoken;
     Value* value; // abstract class
 
-#line 132 "./inc/parser_tab.h"
+#line 133 "./inc/parser_tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

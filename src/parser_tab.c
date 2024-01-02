@@ -75,6 +75,7 @@
 #include <cstdarg>
 #include <cinttypes>
 
+#include <architecture.hpp>
 #include <compiler.hpp>
 #include <value.hpp>
 #include <rvalue.hpp>
@@ -99,7 +100,7 @@ extern FILE *yyin;
 static Compiler compiler;
 
 
-#line 103 "./src/parser_tab.c"
+#line 104 "./src/parser_tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -585,12 +586,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    94,    94,   101,   106,   112,   119,   126,   131,   138,
-     145,   152,   159,   166,   170,   177,   181,   188,   192,   196,
-     200,   204,   208,   212,   216,   224,   231,   238,   245,   252,
-     259,   266,   273,   280,   284,   288,   292,   299,   303,   307,
-     311,   318,   322,   329,   333,   337,   341,   345,   349,   356,
-     360,   364,   368,   372,   376,   383,   387,   394,   398,   402
+       0,    96,    96,   103,   108,   114,   121,   128,   133,   140,
+     147,   154,   161,   168,   172,   179,   183,   190,   206,   210,
+     214,   218,   222,   226,   236,   244,   251,   258,   265,   272,
+     279,   286,   293,   300,   307,   311,   318,   325,   329,   333,
+     337,   344,   348,   355,   364,   371,   378,   385,   389,   396,
+     400,   404,   408,   412,   416,   423,   427,   434,   441,   445
 };
 #endif
 
@@ -1243,472 +1244,513 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program_all: procedures main  */
-#line 95 "./src/parser.y"
+#line 97 "./src/parser.y"
     {
         compiler.getAsmGenerator().finishProgram();
     }
-#line 1251 "./src/parser_tab.c"
+#line 1252 "./src/parser_tab.c"
     break;
 
   case 3: /* procedures: procedures procedure  */
-#line 102 "./src/parser.y"
+#line 104 "./src/parser.y"
     {
 
     }
-#line 1259 "./src/parser_tab.c"
+#line 1260 "./src/parser_tab.c"
     break;
 
   case 4: /* procedures: %empty  */
-#line 106 "./src/parser.y"
+#line 108 "./src/parser.y"
     {
 
     }
-#line 1267 "./src/parser_tab.c"
+#line 1268 "./src/parser_tab.c"
     break;
 
   case 5: /* procedure: procedure_declaration procedure_end  */
-#line 113 "./src/parser.y"
+#line 115 "./src/parser.y"
     {
         
     }
-#line 1275 "./src/parser_tab.c"
+#line 1276 "./src/parser_tab.c"
     break;
 
   case 6: /* procedure_declaration: YY_PROCEDURE  */
-#line 120 "./src/parser.y"
+#line 122 "./src/parser.y"
     {
 
     }
-#line 1283 "./src/parser_tab.c"
+#line 1284 "./src/parser_tab.c"
     break;
 
   case 7: /* procedure_end: proc_head YY_IS declarations YY_IN commands YY_END  */
-#line 127 "./src/parser.y"
+#line 129 "./src/parser.y"
     {
 
     }
-#line 1291 "./src/parser_tab.c"
+#line 1292 "./src/parser_tab.c"
     break;
 
   case 8: /* procedure_end: proc_head YY_IS YY_IN commands YY_END  */
-#line 132 "./src/parser.y"
+#line 134 "./src/parser.y"
     {
 
     }
-#line 1299 "./src/parser_tab.c"
+#line 1300 "./src/parser_tab.c"
     break;
 
   case 9: /* proc_head: YY_PIDENTIFIER YY_L_BRACKET args_decl YY_R_BRACKET  */
-#line 139 "./src/parser.y"
+#line 141 "./src/parser.y"
     {
 
     }
-#line 1307 "./src/parser_tab.c"
+#line 1308 "./src/parser_tab.c"
     break;
 
   case 10: /* proc_call: YY_PIDENTIFIER YY_L_BRACKET args YY_R_BRACKET  */
-#line 146 "./src/parser.y"
+#line 148 "./src/parser.y"
     {
 
     }
-#line 1315 "./src/parser_tab.c"
+#line 1316 "./src/parser_tab.c"
     break;
 
   case 11: /* main: main_declaration main_end  */
-#line 153 "./src/parser.y"
+#line 155 "./src/parser.y"
     {
 
     }
-#line 1323 "./src/parser_tab.c"
+#line 1324 "./src/parser_tab.c"
     break;
 
   case 12: /* main_declaration: YY_PROGRAM YY_IS  */
-#line 160 "./src/parser.y"
+#line 162 "./src/parser.y"
     {
 
     }
-#line 1331 "./src/parser_tab.c"
+#line 1332 "./src/parser_tab.c"
     break;
 
   case 13: /* main_end: declarations YY_IN commands YY_END  */
-#line 167 "./src/parser.y"
+#line 169 "./src/parser.y"
     {
 
     }
-#line 1339 "./src/parser_tab.c"
+#line 1340 "./src/parser_tab.c"
     break;
 
   case 14: /* main_end: YY_IN commands YY_END  */
-#line 171 "./src/parser.y"
+#line 173 "./src/parser.y"
     {
 
     }
-#line 1347 "./src/parser_tab.c"
+#line 1348 "./src/parser_tab.c"
     break;
 
   case 15: /* commands: commands command  */
-#line 178 "./src/parser.y"
+#line 180 "./src/parser.y"
     {
 
     }
-#line 1355 "./src/parser_tab.c"
+#line 1356 "./src/parser_tab.c"
     break;
 
   case 16: /* commands: command  */
-#line 182 "./src/parser.y"
+#line 184 "./src/parser.y"
     {
 
     }
-#line 1363 "./src/parser_tab.c"
+#line 1364 "./src/parser_tab.c"
     break;
 
   case 17: /* command: identifier YY_ASSIGN expression YY_SEMICOLON  */
-#line 189 "./src/parser.y"
+#line 191 "./src/parser.y"
     {
+        Lvalue* lval = dynamic_cast<Lvalue*>((yyvsp[-3].value));
 
+        // in RetVal Register we have value from expression, so just store it
+        Register& retval = Architecture::getRetValRegister();
+
+        compiler.getAsmGenerator().store(*lval, retval);
+
+        retval.unlock();
+
+        // after assigment set init flag
+        compiler.initVariable((yyvsp[-3].value));
+
+        delete (yyvsp[-3].value);
     }
-#line 1371 "./src/parser_tab.c"
+#line 1384 "./src/parser_tab.c"
     break;
 
   case 18: /* command: if_declaration if_else_declaration if_else_end  */
-#line 193 "./src/parser.y"
+#line 207 "./src/parser.y"
     {
 
     }
-#line 1379 "./src/parser_tab.c"
+#line 1392 "./src/parser_tab.c"
     break;
 
   case 19: /* command: if_declaration if_end  */
-#line 197 "./src/parser.y"
+#line 211 "./src/parser.y"
     {
 
     }
-#line 1387 "./src/parser_tab.c"
+#line 1400 "./src/parser_tab.c"
     break;
 
   case 20: /* command: while_declare while_end  */
-#line 201 "./src/parser.y"
+#line 215 "./src/parser.y"
     {
 
     }
-#line 1395 "./src/parser_tab.c"
+#line 1408 "./src/parser_tab.c"
     break;
 
   case 21: /* command: repeat_until_declaration repeat_until_end  */
-#line 205 "./src/parser.y"
+#line 219 "./src/parser.y"
     {
 
     }
-#line 1403 "./src/parser_tab.c"
+#line 1416 "./src/parser_tab.c"
     break;
 
   case 22: /* command: proc_call YY_SEMICOLON  */
-#line 209 "./src/parser.y"
+#line 223 "./src/parser.y"
     {
 
     }
-#line 1411 "./src/parser_tab.c"
+#line 1424 "./src/parser_tab.c"
     break;
 
   case 23: /* command: YY_READ identifier YY_SEMICOLON  */
-#line 213 "./src/parser.y"
+#line 227 "./src/parser.y"
     {
+        Lvalue* lval = dynamic_cast<Lvalue*>((yyvsp[-1].value));
 
+        compiler.getAsmGenerator().read(*lval);
+
+        compiler.initVariable((yyvsp[-1].value));
+
+        delete (yyvsp[-1].value);
     }
-#line 1419 "./src/parser_tab.c"
+#line 1438 "./src/parser_tab.c"
     break;
 
   case 24: /* command: YY_WRITE value YY_SEMICOLON  */
-#line 217 "./src/parser.y"
+#line 237 "./src/parser.y"
     {
         compiler.getAsmGenerator().write(*(yyvsp[-1].value));
         delete (yyvsp[-1].value);
     }
-#line 1428 "./src/parser_tab.c"
+#line 1447 "./src/parser_tab.c"
     break;
 
   case 25: /* if_declaration: YY_IF  */
-#line 225 "./src/parser.y"
+#line 245 "./src/parser.y"
     {
 
     }
-#line 1436 "./src/parser_tab.c"
+#line 1455 "./src/parser_tab.c"
     break;
 
   case 26: /* if_end: condition YY_THEN commands YY_ENDIF  */
-#line 232 "./src/parser.y"
+#line 252 "./src/parser.y"
     {
 
     }
-#line 1444 "./src/parser_tab.c"
+#line 1463 "./src/parser_tab.c"
     break;
 
   case 27: /* if_else_declaration: condition YY_THEN commands YY_ELSE  */
-#line 239 "./src/parser.y"
+#line 259 "./src/parser.y"
     {
 
     }
-#line 1452 "./src/parser_tab.c"
+#line 1471 "./src/parser_tab.c"
     break;
 
   case 28: /* if_else_end: commands YY_ENDIF  */
-#line 246 "./src/parser.y"
+#line 266 "./src/parser.y"
     {
 
     }
-#line 1460 "./src/parser_tab.c"
+#line 1479 "./src/parser_tab.c"
     break;
 
   case 29: /* while_declare: YY_WHILE  */
-#line 253 "./src/parser.y"
+#line 273 "./src/parser.y"
     {
 
     }
-#line 1468 "./src/parser_tab.c"
+#line 1487 "./src/parser_tab.c"
     break;
 
   case 30: /* while_end: condition YY_DO commands YY_ENDWHILE  */
-#line 260 "./src/parser.y"
+#line 280 "./src/parser.y"
     {
 
     }
-#line 1476 "./src/parser_tab.c"
+#line 1495 "./src/parser_tab.c"
     break;
 
   case 31: /* repeat_until_declaration: YY_REPEAT  */
-#line 267 "./src/parser.y"
+#line 287 "./src/parser.y"
     {
 
     }
-#line 1484 "./src/parser_tab.c"
+#line 1503 "./src/parser_tab.c"
     break;
 
   case 32: /* repeat_until_end: commands YY_UNTIL condition YY_SEMICOLON  */
-#line 274 "./src/parser.y"
+#line 294 "./src/parser.y"
     {
 
     }
-#line 1492 "./src/parser_tab.c"
+#line 1511 "./src/parser_tab.c"
     break;
 
   case 33: /* declarations: declarations YY_COMMA YY_PIDENTIFIER  */
-#line 281 "./src/parser.y"
+#line 301 "./src/parser.y"
     {
+        Lvalue* var = new LvalueVar(*((yyvsp[0].ptoken).str), true);
+        compiler.getVarManager().declareVariable(var);
 
+        delete (yyvsp[0].ptoken).str;
     }
-#line 1500 "./src/parser_tab.c"
+#line 1522 "./src/parser_tab.c"
     break;
 
   case 34: /* declarations: declarations YY_COMMA YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET  */
-#line 285 "./src/parser.y"
-    {
-
-    }
-#line 1508 "./src/parser_tab.c"
-    break;
-
-  case 35: /* declarations: YY_PIDENTIFIER  */
-#line 289 "./src/parser.y"
-    {
-
-    }
-#line 1516 "./src/parser_tab.c"
-    break;
-
-  case 36: /* declarations: YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET  */
-#line 293 "./src/parser.y"
-    {
-
-    }
-#line 1524 "./src/parser_tab.c"
-    break;
-
-  case 37: /* args_decl: args_decl YY_COMMA YY_PIDENTIFIER  */
-#line 300 "./src/parser.y"
-    {
-
-    }
-#line 1532 "./src/parser_tab.c"
-    break;
-
-  case 38: /* args_decl: args_decl YY_COMMA YY_TABLE YY_PIDENTIFIER  */
-#line 304 "./src/parser.y"
-    {
-
-    }
-#line 1540 "./src/parser_tab.c"
-    break;
-
-  case 39: /* args_decl: YY_PIDENTIFIER  */
 #line 308 "./src/parser.y"
     {
 
     }
-#line 1548 "./src/parser_tab.c"
+#line 1530 "./src/parser_tab.c"
     break;
 
-  case 40: /* args_decl: YY_TABLE YY_PIDENTIFIER  */
+  case 35: /* declarations: YY_PIDENTIFIER  */
 #line 312 "./src/parser.y"
     {
+        Lvalue* var = new LvalueVar(*((yyvsp[0].ptoken).str), true);
+        compiler.getVarManager().declareVariable(var);
 
+        delete (yyvsp[0].ptoken).str;
     }
-#line 1556 "./src/parser_tab.c"
+#line 1541 "./src/parser_tab.c"
     break;
 
-  case 41: /* args: args YY_COMMA YY_PIDENTIFIER  */
+  case 36: /* declarations: YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET  */
 #line 319 "./src/parser.y"
     {
 
     }
-#line 1564 "./src/parser_tab.c"
+#line 1549 "./src/parser_tab.c"
     break;
 
-  case 42: /* args: YY_PIDENTIFIER  */
-#line 323 "./src/parser.y"
+  case 37: /* args_decl: args_decl YY_COMMA YY_PIDENTIFIER  */
+#line 326 "./src/parser.y"
     {
-
+        
     }
-#line 1572 "./src/parser_tab.c"
+#line 1557 "./src/parser_tab.c"
     break;
 
-  case 43: /* expression: value  */
+  case 38: /* args_decl: args_decl YY_COMMA YY_TABLE YY_PIDENTIFIER  */
 #line 330 "./src/parser.y"
     {
 
     }
-#line 1580 "./src/parser_tab.c"
+#line 1565 "./src/parser_tab.c"
     break;
 
-  case 44: /* expression: value YY_ADD value  */
+  case 39: /* args_decl: YY_PIDENTIFIER  */
 #line 334 "./src/parser.y"
     {
 
     }
-#line 1588 "./src/parser_tab.c"
+#line 1573 "./src/parser_tab.c"
     break;
 
-  case 45: /* expression: value YY_SUB value  */
+  case 40: /* args_decl: YY_TABLE YY_PIDENTIFIER  */
 #line 338 "./src/parser.y"
     {
 
     }
-#line 1596 "./src/parser_tab.c"
+#line 1581 "./src/parser_tab.c"
+    break;
+
+  case 41: /* args: args YY_COMMA YY_PIDENTIFIER  */
+#line 345 "./src/parser.y"
+    {
+
+    }
+#line 1589 "./src/parser_tab.c"
+    break;
+
+  case 42: /* args: YY_PIDENTIFIER  */
+#line 349 "./src/parser.y"
+    {
+
+    }
+#line 1597 "./src/parser_tab.c"
+    break;
+
+  case 43: /* expression: value  */
+#line 356 "./src/parser.y"
+    {
+        Register& retval = Architecture::getRetValRegister();
+        retval.lock();
+
+        compiler.getAsmGenerator().load(retval, *(yyvsp[0].value));
+
+        delete (yyvsp[0].value);
+    }
+#line 1610 "./src/parser_tab.c"
+    break;
+
+  case 44: /* expression: value YY_ADD value  */
+#line 365 "./src/parser.y"
+    {
+        compiler.getAsmGenerator().add(*(yyvsp[-2].value), *(yyvsp[0].value));
+
+        delete (yyvsp[-2].value);
+        delete (yyvsp[0].value);
+    }
+#line 1621 "./src/parser_tab.c"
+    break;
+
+  case 45: /* expression: value YY_SUB value  */
+#line 372 "./src/parser.y"
+    {
+        compiler.getAsmGenerator().sub(*(yyvsp[0].value), *(yyvsp[-2].value));
+
+        delete (yyvsp[-2].value);
+        delete (yyvsp[0].value);
+    }
+#line 1632 "./src/parser_tab.c"
     break;
 
   case 46: /* expression: value YY_MUL value  */
-#line 342 "./src/parser.y"
+#line 379 "./src/parser.y"
     {
+        compiler.getAsmGenerator().mul(*(yyvsp[-2].value), *(yyvsp[0].value));
 
+        delete (yyvsp[-2].value);
+        delete (yyvsp[0].value);
     }
-#line 1604 "./src/parser_tab.c"
+#line 1643 "./src/parser_tab.c"
     break;
 
   case 47: /* expression: value YY_DIV value  */
-#line 346 "./src/parser.y"
+#line 386 "./src/parser.y"
     {
 
     }
-#line 1612 "./src/parser_tab.c"
+#line 1651 "./src/parser_tab.c"
     break;
 
   case 48: /* expression: value YY_MOD value  */
-#line 350 "./src/parser.y"
+#line 390 "./src/parser.y"
     {
 
     }
-#line 1620 "./src/parser_tab.c"
+#line 1659 "./src/parser_tab.c"
     break;
 
   case 49: /* condition: expression YY_EQ expression  */
-#line 357 "./src/parser.y"
+#line 397 "./src/parser.y"
     {
 
     }
-#line 1628 "./src/parser_tab.c"
+#line 1667 "./src/parser_tab.c"
     break;
 
   case 50: /* condition: expression YY_NE expression  */
-#line 361 "./src/parser.y"
+#line 401 "./src/parser.y"
     {
 
     }
-#line 1636 "./src/parser_tab.c"
+#line 1675 "./src/parser_tab.c"
     break;
 
   case 51: /* condition: expression YY_LT expression  */
-#line 365 "./src/parser.y"
+#line 405 "./src/parser.y"
     {
 
     }
-#line 1644 "./src/parser_tab.c"
+#line 1683 "./src/parser_tab.c"
     break;
 
   case 52: /* condition: expression YY_GT expression  */
-#line 369 "./src/parser.y"
+#line 409 "./src/parser.y"
     {
 
     }
-#line 1652 "./src/parser_tab.c"
+#line 1691 "./src/parser_tab.c"
     break;
 
   case 53: /* condition: expression YY_LE expression  */
-#line 373 "./src/parser.y"
+#line 413 "./src/parser.y"
     {
 
     }
-#line 1660 "./src/parser_tab.c"
+#line 1699 "./src/parser_tab.c"
     break;
 
   case 54: /* condition: expression YY_GE expression  */
-#line 377 "./src/parser.y"
+#line 417 "./src/parser.y"
     {
 
     }
-#line 1668 "./src/parser_tab.c"
+#line 1707 "./src/parser_tab.c"
     break;
 
   case 55: /* value: YY_NUM  */
-#line 384 "./src/parser.y"
+#line 424 "./src/parser.y"
     {
         (yyval.value) = new Rvalue((yyvsp[0].ptoken).val);
     }
-#line 1676 "./src/parser_tab.c"
+#line 1715 "./src/parser_tab.c"
     break;
 
   case 56: /* value: identifier  */
-#line 388 "./src/parser.y"
+#line 428 "./src/parser.y"
     {
 
     }
-#line 1684 "./src/parser_tab.c"
+#line 1723 "./src/parser_tab.c"
     break;
 
   case 57: /* identifier: YY_PIDENTIFIER  */
-#line 395 "./src/parser.y"
+#line 435 "./src/parser.y"
     {
+        LvalueVar* var = dynamic_cast<LvalueVar*>(compiler.getVarManager().getVariable(*((yyvsp[0].ptoken).str)).get());
+        (yyval.value) = new LvalueVar(*var);
 
+        delete (yyvsp[0].ptoken).str;
     }
-#line 1692 "./src/parser_tab.c"
+#line 1734 "./src/parser_tab.c"
     break;
 
   case 58: /* identifier: YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET  */
-#line 399 "./src/parser.y"
+#line 442 "./src/parser.y"
     {
 
     }
-#line 1700 "./src/parser_tab.c"
+#line 1742 "./src/parser_tab.c"
     break;
 
   case 59: /* identifier: YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_PIDENTIFIER YY_R_SQUARE_BRACKET  */
-#line 403 "./src/parser.y"
+#line 446 "./src/parser.y"
     {
 
     }
-#line 1708 "./src/parser_tab.c"
+#line 1750 "./src/parser_tab.c"
     break;
 
 
-#line 1712 "./src/parser_tab.c"
+#line 1754 "./src/parser_tab.c"
 
       default: break;
     }
@@ -1901,7 +1943,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 408 "./src/parser.y"
+#line 451 "./src/parser.y"
 
 
 static void yyerror(const char* msg)

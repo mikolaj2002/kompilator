@@ -5,6 +5,7 @@
 #include <cstdarg>
 #include <cinttypes>
 
+#include <architecture.hpp>
 #include <compiler.hpp>
 #include <value.hpp>
 #include <rvalue.hpp>
@@ -35,6 +36,7 @@ static Compiler compiler;
     #include <cstdint>
     #include <cstring>
 
+    #include <architecture.hpp>
     #include <compiler.hpp>
     #include <value.hpp>
     #include <rvalue.hpp>
@@ -86,7 +88,7 @@ static Compiler compiler;
 %type   <ptoken>	YY_PIDENTIFIER YY_NUM
 %type   <ptoken>	YY_ERROR
 
-%type   <value>     value
+%type   <value>     value identifier
 
 %%
 
@@ -187,7 +189,19 @@ commands:
 command:
     identifier YY_ASSIGN expression YY_SEMICOLON
     {
+        Lvalue* lval = dynamic_cast<Lvalue*>($1);
 
+        // in RetVal Register we have value from expression, so just store it
+        Register& retval = Architecture::getRetValRegister();
+
+        compiler.getAsmGenerator().store(*lval, retval);
+
+        retval.unlock();
+
+        // after assigment set init flag
+        compiler.initVariable($1);
+
+        delete $1;
     }
     | if_declaration if_else_declaration if_else_end
     {
@@ -211,7 +225,13 @@ command:
     }
     | YY_READ identifier YY_SEMICOLON
     {
+        Lvalue* lval = dynamic_cast<Lvalue*>($2);
 
+        compiler.getAsmGenerator().read(*lval);
+
+        compiler.initVariable($2);
+
+        delete $2;
     }
     | YY_WRITE value YY_SEMICOLON
     {
@@ -279,7 +299,10 @@ repeat_until_end:
 declarations:
     declarations YY_COMMA YY_PIDENTIFIER
     {
+        Lvalue* var = new LvalueVar(*($3.str), true);
+        compiler.getVarManager().declareVariable(var);
 
+        delete $3.str;
     }
     | declarations YY_COMMA YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
@@ -287,7 +310,10 @@ declarations:
     }
     | YY_PIDENTIFIER
     {
+        Lvalue* var = new LvalueVar(*($1.str), true);
+        compiler.getVarManager().declareVariable(var);
 
+        delete $1.str;
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
@@ -298,7 +324,7 @@ declarations:
 args_decl:
     args_decl YY_COMMA YY_PIDENTIFIER
     {
-
+        
     }
     | args_decl YY_COMMA YY_TABLE YY_PIDENTIFIER
     {
@@ -328,19 +354,33 @@ args:
 expression:
     value
     {
+        Register& retval = Architecture::getRetValRegister();
+        retval.lock();
 
+        compiler.getAsmGenerator().load(retval, *$1);
+
+        delete $1;
     }
     | value YY_ADD value
     {
+        compiler.getAsmGenerator().add(*$1, *$3);
 
+        delete $1;
+        delete $3;
     }
     | value YY_SUB value
     {
+        compiler.getAsmGenerator().sub(*$3, *$1);
 
+        delete $1;
+        delete $3;
     }
     | value YY_MUL value
     {
+        compiler.getAsmGenerator().mul(*$1, *$3);
 
+        delete $1;
+        delete $3;
     }
     | value YY_DIV value
     {
@@ -393,7 +433,10 @@ value:
 identifier:
     YY_PIDENTIFIER
     {
+        LvalueVar* var = dynamic_cast<LvalueVar*>(compiler.getVarManager().getVariable(*($1.str)).get());
+        $$ = new LvalueVar(*var);
 
+        delete $1.str;
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
