@@ -1,8 +1,0 @@
-PROGRAM IS
-    a, b, res
-IN
-    READ a;
-    READ b;
-    res := a * b;
-    WRITE res;
-END

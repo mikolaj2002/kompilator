@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# Simple E2E tests
-
-# Test0. Test simple functionality
-in_file="./test0.txt"
+# Test1. Test Arithmetic operations
+in_file="./test1.txt"
 asm_file="./asm.txt"
 out_file="./out.txt"
-expected_out_file="./test0_expected.txt"
+expected_out_file="./test1_expected.txt"
 error_file="./error.txt"
 name="simple functionality"
 ../kompilator $in_file $asm_file 2>$error_file

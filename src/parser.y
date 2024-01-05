@@ -384,11 +384,17 @@ expression:
     }
     | value YY_DIV value
     {
+        compiler.getAsmGenerator().div(*$1, *$3);
 
+        delete $1;
+        delete $3;
     }
     | value YY_MOD value
     {
+        compiler.getAsmGenerator().mod(*$1, *$3);
 
+        delete $1;
+        delete $3;
     }
 ;
 
