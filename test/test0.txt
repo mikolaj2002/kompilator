@@ -1,0 +1,8 @@
+PROGRAM IS
+    tab[3]
+IN
+    READ tab[0];
+    tab[1] := 15;
+    tab[2] := tab[0] + tab[1];
+    WRITE tab[2];
+END

@@ -168,34 +168,52 @@ void AssemblerGenerator::moveRvalueToReg(const Register& x, uint64_t val) {
 void AssemblerGenerator::moveAddrToReg(const Register& x, const Lvalue& var) {
     if (var.getType() == Value::VALTYPE_LVALUE_VAR)
         moveRvalueToReg(x, dynamic_cast<const LvalueVar&>(var).getAddr());
-    // else  // Array, t[a] or t[10]
-    // {
-    //     const LvalueArray& arr = dynamic_cast<const LvalueArray&>(var);
-    //     moveRvalueToReg(x, arr.get_addr());  // x := &arr[0]
+    else  // Array, t[a] or t[10]
+    {
+        const LvalueArray& arr = dynamic_cast<const LvalueArray&>(var);
+        moveRvalueToReg(x, arr.getAddr());  // x := &arr[0]
 
-    //     Register& temp = Architecture::getFreeRegister();
-    //     temp.lock();
+        Register& temp = Architecture::getFreeRegister();
+        temp.lock();
 
-    //     const Value* accessElement = arr.getAccessElement();
-    //     if (access_element->getType() == Value::VALTYPE_RVALUE)
-    //         moveRvalueToReg(
-    //             temp, dynamic_cast<const
-    //             Rvalue*>(accessElement)->getValue());
-    //     else {
-    //         moveRvalueToReg(
-    //             temp, dynamic_cast<const
-    //             Lvalue*>(access_element)->getAddr());
-    //         asmLoad(temp, temp);  // temp := *(&access_element)
-    //     }
+        const Value* accessElement = arr.getAccessElement();
+        if (accessElement->getType() == Value::VALTYPE_RVALUE)
+            moveRvalueToReg(
+                temp, dynamic_cast<const Rvalue*>(accessElement)->getValue());
+        // else {
+        //     moveRvalueToReg(
+        //         temp, dynamic_cast<const Lvalue*>(accessElement)->getAddr());
 
-    //     asm_add(x, temp);  // x := &arr[access_element]
+        //     Register& temp2 = Architecture::getFreeRegister();
+        //     if (!retval.isFree()) {
+        //         temp2.lock();
+        //         asmPut(temp2);
+        //     }
+        //     asmGet(temp);
+        //     asmLoad(temp);  // temp := *(&access_element)
+        //     asmPut(temp);
+        //     if (!retval.isFree()) {
+        //         asmGet(temp2);
+        //         temp2.unlock();
+        //     }
+        // }
 
-    //     move_rvalue_to_reg(temp, arr.get_access_offset());  // temp := offset
+        Register& retVal = Architecture::getRetValRegister();
+        Register& temp2 = Architecture::getFreeRegister();
+        if (!retVal.isFree()) {
+            temp2.lock();
+            asmPut(temp2);
+        }
+        asmGet(x);
+        asmAdd(temp);  // x := &arr[access_element]
+        asmPut(x);
+        if (!retVal.isFree()) {
+            asmGet(temp2);
+            temp2.unlock();
+        }
 
-    //     asm_sub(x, temp);  // x := &arr[access_element - array_offset]
-
-    //     temp.unlock();
-    // }
+        temp.unlock();
+    }
 }
 
 void AssemblerGenerator::load(const Register& x, const Value& val) {
@@ -376,7 +394,8 @@ void AssemblerGenerator::mul(const Value& val1, const Value& val2) {
 
 void AssemblerGenerator::div(const Value& val1, const Value& val2) {
     // PREPARATION PHASE
-    // Alloc 2 variables (clone of val1 and val2) to make reload easier (1 reg instead of 2 in case of array)
+    // Alloc 2 variables (clone of val1 and val2) to make reload easier (1 reg
+    // instead of 2 in case of array)
     Lvalue* cloneVal1 = new LvalueVar("clone1", true);
     cloneVal1->setAddr(Architecture::alloc(1));
 
@@ -411,15 +430,16 @@ void AssemblerGenerator::div(const Value& val1, const Value& val2) {
     Register& retval = Architecture::getRetValRegister();
     retval.lock();
 
-    //CHECK PHASE
-    // 0 / 0 -> 0, a / 0 -> 0, 0 / b -> 0
-    // a / b -> 1
-    // a / b -> 0 if a < b
+    // CHECK PHASE
+    //  0 / 0 -> 0, a / 0 -> 0, 0 / b -> 0
+    //  a / b -> 1
+    //  a / b -> 0 if a < b
 
     const std::string label_end = labelManager.createLabel("DIV_END");
     const std::string label_ret0 = labelManager.createLabel("DIV_RETURN_0");
     const std::string label_ret1 = labelManager.createLabel("DIV_RETURN_1");
-    const std::string label_start_algo = labelManager.createLabel("DIV_START_ALGO");
+    const std::string label_start_algo =
+        labelManager.createLabel("DIV_START_ALGO");
 
     // return 0
     asmGet(temp1);
@@ -427,7 +447,8 @@ void AssemblerGenerator::div(const Value& val1, const Value& val2) {
     asmGet(temp2);
     asmJZeroLabel(label_ret0);
 
-    // max{a - b, 0} + max{b - a, 0} == 0 iff a == b. But we know that a != 0 && b & 0 so return 1
+    // max{a - b, 0} + max{b - a, 0} == 0 iff a == b. But we know that a != 0 &&
+    // b & 0 so return 1
     asmGet(temp1);
     asmSub(temp2);
     asmPut(temp1);
@@ -458,7 +479,8 @@ void AssemblerGenerator::div(const Value& val1, const Value& val2) {
     const std::string label_count_0 = labelManager.createLabel("DIV_COUNT_0");
     const std::string label_reload_b = labelManager.createLabel("DIV_RELOAD_B");
     const std::string label_add_0 = labelManager.createLabel("DIV_ADD_0");
-    const std::string label_finish_add_0 = labelManager.createLabel("DIV_FINISH_ADD_0");
+    const std::string label_finish_add_0 =
+        labelManager.createLabel("DIV_FINISH_ADD_0");
     const std::string label_loop = labelManager.createLabel("DIV_COUNT_LOOP");
     const std::string label_b_gt = labelManager.createLabel("DIV_B_IS_GREATER");
 
@@ -477,7 +499,8 @@ void AssemblerGenerator::div(const Value& val1, const Value& val2) {
     asmJumpLabel(label_count_0);
 
     labelManager.insertLabel(label_reload_b);
-    load(temp2, *cloneVal2); // we have broken "b" in temp2 but we need fresh "b" -> reload
+    load(temp2, *cloneVal2);  // we have broken "b" in temp2 but we need fresh
+                              // "b" -> reload
 
     labelManager.insertLabel(label_add_0);
     asmGet(temp1);
@@ -488,7 +511,8 @@ void AssemblerGenerator::div(const Value& val1, const Value& val2) {
     asmJumpLabel(label_add_0);
 
     labelManager.insertLabel(label_finish_add_0);
-    load(temp1, *cloneVal1); // as above here we used "a" to calculate temp3 (counter). Reload fresh "a"
+    load(temp1, *cloneVal1);  // as above here we used "a" to calculate temp3
+                              // (counter). Reload fresh "a"
 
     // MAIN DIV LOOP
     labelManager.insertLabel(label_loop);
@@ -505,12 +529,13 @@ void AssemblerGenerator::div(const Value& val1, const Value& val2) {
     asmInc(temp4);
     asmShr(temp2);
 
-    // store current value in memory, we need current value in reg and prev value in memory
+    // store current value in memory, we need current value in reg and prev
+    // value in memory
     store(*cloneVal1, temp1);
     asmJumpLabel(label_loop);
 
     labelManager.insertLabel(label_b_gt);
-    load(temp1, *cloneVal1); // get prev value of "a"
+    load(temp1, *cloneVal1);  // get prev value of "a"
     asmShl(temp4);
     asmDec(temp3);
     asmShr(temp2);
@@ -530,7 +555,8 @@ void AssemblerGenerator::div(const Value& val1, const Value& val2) {
 
 void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     // PREPARATION PHASE
-    // Alloc 2 variables (clone of val1 and val2) to make reload easier (1 reg instead of 2 in case of array)
+    // Alloc 2 variables (clone of val1 and val2) to make reload easier (1 reg
+    // instead of 2 in case of array)
     Lvalue* cloneVal1 = new LvalueVar("clone1", true);
     cloneVal1->setAddr(Architecture::alloc(1));
 
@@ -565,15 +591,16 @@ void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     Register& retval = Architecture::getRetValRegister();
     retval.lock();
 
-    //CHECK PHASE
-    // 0 / 0 -> 0, a / 0 -> 0, 0 / b -> 0
-    // a / b -> 1
-    // a / b -> 0 if a < b
+    // CHECK PHASE
+    //  0 / 0 -> 0, a / 0 -> 0, 0 / b -> 0
+    //  a / b -> 1
+    //  a / b -> 0 if a < b
 
     const std::string label_end = labelManager.createLabel("MOD_END");
     const std::string label_ret0 = labelManager.createLabel("MOD_RETURN_0");
     const std::string label_reta = labelManager.createLabel("MOD_RETURN_a");
-    const std::string label_start_algo = labelManager.createLabel("MOD_START_ALGO");
+    const std::string label_start_algo =
+        labelManager.createLabel("MOD_START_ALGO");
 
     // return 0
     asmGet(temp1);
@@ -581,7 +608,8 @@ void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     asmGet(temp2);
     asmJZeroLabel(label_ret0);
 
-    // max{a - b, 0} + max{b - a, 0} == 0 iff a == b. But we know that a != 0 && b & 0 so return 1
+    // max{a - b, 0} + max{b - a, 0} == 0 iff a == b. But we know that a != 0 &&
+    // b & 0 so return 1
     asmGet(temp1);
     asmSub(temp2);
     asmPut(temp1);
@@ -613,7 +641,8 @@ void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     const std::string label_count_0 = labelManager.createLabel("MOD_COUNT_0");
     const std::string label_reload_b = labelManager.createLabel("MOD_RELOAD_B");
     const std::string label_add_0 = labelManager.createLabel("MOD_ADD_0");
-    const std::string label_finish_add_0 = labelManager.createLabel("MOD_FINISH_ADD_0");
+    const std::string label_finish_add_0 =
+        labelManager.createLabel("MOD_FINISH_ADD_0");
     const std::string label_loop = labelManager.createLabel("MOD_COUNT_LOOP");
     const std::string label_b_gt = labelManager.createLabel("MOD_B_IS_GREATER");
 
@@ -632,7 +661,8 @@ void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     asmJumpLabel(label_count_0);
 
     labelManager.insertLabel(label_reload_b);
-    load(temp2, *cloneVal2); // we have broken "b" in temp2 but we need fresh "b" -> reload
+    load(temp2, *cloneVal2);  // we have broken "b" in temp2 but we need fresh
+                              // "b" -> reload
 
     labelManager.insertLabel(label_add_0);
     asmGet(temp4);
@@ -643,7 +673,8 @@ void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     asmJumpLabel(label_add_0);
 
     labelManager.insertLabel(label_finish_add_0);
-    load(temp4, *cloneVal1); // as above here we used "a" to calculate temp3 (counter). Reload fresh "a"
+    load(temp4, *cloneVal1);  // as above here we used "a" to calculate temp3
+                              // (counter). Reload fresh "a"
 
     // MAIN DIV LOOP
     labelManager.insertLabel(label_loop);
@@ -660,12 +691,13 @@ void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     asmInc(temp1);
     asmShr(temp2);
 
-    // store current value in memory, we need current value in reg and prev value in memory
+    // store current value in memory, we need current value in reg and prev
+    // value in memory
     store(*cloneVal1, temp4);
     asmJumpLabel(label_loop);
 
     labelManager.insertLabel(label_b_gt);
-    load(temp4, *cloneVal1); // get prev value of "a"
+    load(temp4, *cloneVal1);  // get prev value of "a"
     asmShl(temp1);
     asmDec(temp3);
     asmShr(temp2);

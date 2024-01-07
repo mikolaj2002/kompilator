@@ -104,7 +104,7 @@ procedures:
     {
 
     }
-    |
+    | %empty
     {
 
     }
@@ -306,7 +306,10 @@ declarations:
     }
     | declarations YY_COMMA YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
+        Lvalue* var = new LvalueArray(*($3.str), $5.val);
+        compiler.getVarManager().declareVariable(var);
 
+        delete $3.str;
     }
     | YY_PIDENTIFIER
     {
@@ -317,7 +320,10 @@ declarations:
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
+        Lvalue* var = new LvalueArray(*($1.str), $3.val);
+        compiler.getVarManager().declareVariable(var);
 
+        delete $1.str;
     }
 ;
 
@@ -446,11 +452,26 @@ identifier:
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
+        LvalueArray* array = dynamic_cast<LvalueArray*>(compiler.getVarManager().getVariable(*($1.str)).get());
+        auto val = std::shared_ptr<Value>(new Rvalue($3.val));
 
+        LvalueArray* forward =  new LvalueArray(*array);
+        forward->setAccessElement(val);
+        $$ = forward;
+
+        delete $1.str;
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_PIDENTIFIER YY_R_SQUARE_BRACKET
     {
+        LvalueArray* array = dynamic_cast<LvalueArray*>(compiler.getVarManager().getVariable(*($1.str)).get());
+        auto var = compiler.getVarManager().getVariable(*($3.str));
 
+        LvalueArray* forward = new LvalueArray(*array);
+        forward->setAccessElement(var);
+        $$ = forward;
+
+        delete $1.str;
+        delete $3.str;
     }
 ;
 
