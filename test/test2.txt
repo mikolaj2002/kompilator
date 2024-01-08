@@ -1,0 +1,12 @@
+# Test2. Array declaration and operations
+
+PROGRAM IS
+    tab_a[20], tab_b[10], result
+IN
+    tab_a[10] := 5;
+    tab_b[9] := 4;
+    tab_a[0] := 6;
+    result := tab_a[10] + tab_b[9];
+    result := result * tab_a[0];
+    WRITE result;
+END
