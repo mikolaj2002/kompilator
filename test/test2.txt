@@ -1,7 +1,7 @@
 # Test2. Array declaration and operations
 
 PROGRAM IS
-    tab_a[20], tab_b[10], result
+    tab_a[20], tab_b[10], result, idx, idx_a
 IN
     tab_a[10] := 5;
     tab_b[9] := 4;
@@ -9,4 +9,10 @@ IN
     result := tab_a[10] + tab_b[9];
     result := result * tab_a[0];
     WRITE result;
+
+    idx := 9;
+    idx_a := 0;
+    tab_a[idx_a] := tab_b[idx] * 2;
+    tab_b[idx] := tab_a[idx_a];
+    WRITE tab_b[idx];
 END
