@@ -1,0 +1,45 @@
+# Test 3. Conditions
+
+PROGRAM IS
+    value_true, value_false, x, y
+IN
+
+    value_true := 100;
+    value_false := 69;
+
+    IF 2 < 3 THEN
+        WRITE value_true;
+    ELSE
+        WRITE value_false;
+    ENDIF
+
+    x := 15;
+    y := 16;
+    IF y >= x THEN
+        WRITE value_true;
+        IF y = x THEN
+            WRITE value_true;
+        ELSE
+            WRITE value_false;
+        ENDIF
+    ELSE
+        WRITE value_false;
+    ENDIF
+
+    IF x != y THEN
+        WRITE value_true;
+    ELSE
+        WRITE value_false;
+    ENDIF
+
+    IF x > y THEN
+        WRITE value_true;
+    ELSE
+        IF y <= x THEN
+            WRITE value_true;
+        ELSE
+            WRITE value_false;
+        ENDIF
+    ENDIF
+
+END

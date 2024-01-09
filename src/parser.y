@@ -203,11 +203,11 @@ command:
 
         delete $1;
     }
-    | if_declaration if_else_declaration if_else_end
+    | if_condition if_else if_else_end
     {
 
     }
-    | if_declaration if_end
+    | if_condition if_end
     {
 
     }
@@ -240,31 +240,40 @@ command:
     }
 ;
 
-if_declaration:
-    YY_IF
+if_condition:
+    YY_IF condition YY_THEN
     {
 
     }
 ;
 
 if_end:
-    condition YY_THEN commands YY_ENDIF
+    commands YY_ENDIF
     {
-
+        ConditionalBranch branch = compiler.getBranchManager().getBranchFromStack();
+        compiler.getAsmGenerator().ifInsertJumpPoint(branch);
     }
 ;
 
-if_else_declaration:
-    condition YY_THEN commands YY_ELSE
+if_else:
+    commands YY_ELSE
     {
+        ConditionalBranch jumpFromIf = ConditionalBranch(compiler.getAsmGenerator().getLabelManager().createLabel("JUMP_AFTER_IF"));
+        compiler.getAsmGenerator().ifSkipElse(jumpFromIf);
 
+        ConditionalBranch branch = compiler.getBranchManager().getBranchFromStack();
+
+        compiler.getAsmGenerator().ifInsertJumpPoint(branch);
+
+        compiler.getBranchManager().addBranch(jumpFromIf);
     }
 ;
 
 if_else_end:
     commands YY_ENDIF
     {
-
+        ConditionalBranch branch = compiler.getBranchManager().getBranchFromStack();
+        compiler.getAsmGenerator().ifInsertJumpPoint(branch);
     }
 ;
 
@@ -405,29 +414,53 @@ expression:
 ;
 
 condition:
-    expression YY_EQ expression
+    value YY_EQ value
     {
+        ConditionalBranch branch = compiler.getAsmGenerator().branchEq(*$1, *$3);
+        compiler.getBranchManager().addBranch(branch);
 
+        delete $1;
+        delete $3;
     }
-    | expression YY_NE expression
+    | value YY_NE value
     {
+        ConditionalBranch branch = compiler.getAsmGenerator().branchNeq(*$1, *$3);
+        compiler.getBranchManager().addBranch(branch);
 
+        delete $1;
+        delete $3;
     }
-    | expression YY_LT expression
+    | value YY_LT value
     {
+        ConditionalBranch branch = compiler.getAsmGenerator().branchLt(*$1, *$3);
+        compiler.getBranchManager().addBranch(branch);
 
+        delete $1;
+        delete $3;
     }
-    | expression YY_GT expression
+    | value YY_GT value
     {
+        ConditionalBranch branch = compiler.getAsmGenerator().branchGt(*$1, *$3);
+        compiler.getBranchManager().addBranch(branch);
 
+        delete $1;
+        delete $3;
     }
-    | expression YY_LE expression
+    | value YY_LE value
     {
+        ConditionalBranch branch = compiler.getAsmGenerator().branchLeq(*$1, *$3);
+        compiler.getBranchManager().addBranch(branch);
 
+        delete $1;
+        delete $3;
     }
-    | expression YY_GE expression
+    | value YY_GE value
     {
+        ConditionalBranch branch = compiler.getAsmGenerator().branchGeq(*$1, *$3);
+        compiler.getBranchManager().addBranch(branch);
 
+        delete $1;
+        delete $3;
     }
 ;
 

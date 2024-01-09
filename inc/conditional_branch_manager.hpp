@@ -5,12 +5,12 @@
 #include <stack>
 
 class ConditionalBranchManager {
-   private:
-    std::stack<ConditionalBranch> stack_branch;
+ private:
+  std::stack<ConditionalBranch> stackBranch;
 
-   public:
-    void addBranch(const ConditionalBranch& branch);
-    ConditionalBranch getBranchFromStack();
+ public:
+  void addBranch(const ConditionalBranch& branch);
+  ConditionalBranch getBranchFromStack();
 };
 
 #endif

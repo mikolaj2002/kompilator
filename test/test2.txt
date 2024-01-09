@@ -13,6 +13,6 @@ IN
     idx := 9;
     idx_a := 0;
     tab_a[idx_a] := tab_b[idx] * 2;
-    tab_b[idx] := tab_a[idx_a];
+    tab_b[idx] := tab_a[0];
     WRITE tab_b[idx];
 END
