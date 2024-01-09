@@ -841,6 +841,29 @@ void AssemblerGenerator::ifSkipElse(const ConditionalBranch& branch) {
   asmJumpLabel(branch.getLabelFalse());
 }
 
+void AssemblerGenerator::startWhileLoop(const LoopWhile& loop) {
+  labelManager.insertLabel(loop.getStartLabel());
+}
+
+void AssemblerGenerator::doWhileLoop(const LoopWhile& loop) {
+  asmJumpLabel(loop.getStartLabel());
+  labelManager.insertLabel(loop.getEndLabel());
+}
+
+void AssemblerGenerator::startUntilLoop(const LoopUntil& loop) {
+  labelManager.insertLabel(loop.getStartLabel());
+}
+
+void AssemblerGenerator::doUntilLoop(const LoopUntil& loop) {
+  const std::string labelEnd = labelManager.createLabel("UNTIL_END");
+  asmJumpLabel(labelEnd);
+
+  labelManager.insertLabel(loop.getEndLabel());
+  asmJumpLabel(loop.getStartLabel());
+
+  labelManager.insertLabel(labelEnd);
+}
+
 void AssemblerGenerator::finishProgram() { asmHalt(); }
 
 void AssemblerGenerator::finishCodeGeneration() {

@@ -277,24 +277,44 @@ if_else_end:
     }
 ;
 
-while_declare:
+pre_while:
     YY_WHILE
     {
+        const std::string labelStart = compiler.getAsmGenerator().getLabelManager().createLabel("WHILE_START");
 
+        Loop* loop = new LoopWhile(labelStart, std::string("to_be_defined_later"));
+        compiler.getLoopManager().addLoopToStack(loop);
+
+        compiler.getAsmGenerator().startWhileLoop(*dynamic_cast<LoopWhile*>(loop));
+    }
+;
+
+while_declare:
+    pre_while condition YY_DO
+    {
+        ConditionalBranch branch = compiler.getBranchManager().getBranchFromStack();
+        compiler.getLoopManager().getLoopTopStack()->setEndLabel(branch.getLabelFalse());
     }
 ;
 
 while_end:
-    condition YY_DO commands YY_ENDWHILE
+    commands YY_ENDWHILE
     {
-
+        Loop* loop = compiler.getLoopManager().getLoopFromStack();
+        compiler.getAsmGenerator().doWhileLoop(*dynamic_cast<LoopWhile*>(loop));
+        delete loop;
     }
 ;
 
 repeat_until_declaration:
     YY_REPEAT
     {
+        const std::string labelStart = compiler.getAsmGenerator().getLabelManager().createLabel("REPEAT_START");
 
+        Loop* loop = new LoopUntil(labelStart, std::string("to_be_defined_later"));
+        compiler.getLoopManager().addLoopToStack(loop);
+
+        compiler.get_asm_generator().start_until_loop(*dynamic_cast<Loop_until*>(loop));
     }
 ;
 

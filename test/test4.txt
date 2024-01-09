@@ -1,0 +1,9 @@
+PROGRAM IS
+    x
+IN
+    x := 31;
+    WHILE x > 0 DO
+        WRITE x;
+        x := x / 2;
+    ENDWHILE
+END
