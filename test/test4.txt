@@ -1,6 +1,14 @@
+# Test 4. Loops
+
 PROGRAM IS
     x
 IN
+    x := 31;
+    REPEAT
+        WRITE x;
+        x := x / 2;
+    UNTIL x = 0;
+
     x := 31;
     WHILE x > 0 DO
         WRITE x;

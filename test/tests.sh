@@ -63,6 +63,27 @@ rm -f $asm_file
 rm -f $out_file
 rm -f $error_file
 
+# Test3. Loops
+in_file="./test4.txt"
+asm_file="./asm.txt"
+out_file="./out.txt"
+expected_out_file="./test4_expected.txt"
+error_file="./error.txt"
+name="loops"
+../kompilator $in_file $asm_file 2>$error_file
+echo -n "TEST: $name ..."
+echo "654321 3" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
+diff_res=$(diff $out_file $expected_out_file)
+if [ -s $error_file ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $asm_file
+rm -f $out_file
+rm -f $error_file
+
 
 # # Test1. Correct gramma checker. Expected result: empty stderr and 0 as retval
 # in_file="./gramma_correct.txt"

@@ -314,14 +314,21 @@ repeat_until_declaration:
         Loop* loop = new LoopUntil(labelStart, std::string("to_be_defined_later"));
         compiler.getLoopManager().addLoopToStack(loop);
 
-        compiler.get_asm_generator().start_until_loop(*dynamic_cast<Loop_until*>(loop));
+        compiler.getAsmGenerator().startUntilLoop(*dynamic_cast<LoopUntil*>(loop));
     }
 ;
 
 repeat_until_end:
     commands YY_UNTIL condition YY_SEMICOLON
     {
+        Loop* loop = compiler.getLoopManager().getLoopFromStack();
 
+        ConditionalBranch branch = compiler.getBranchManager().getBranchFromStack();
+        loop->setEndLabel(branch.getLabelFalse());
+
+        compiler.getAsmGenerator().doUntilLoop(*dynamic_cast<LoopUntil*>(loop));
+
+        delete loop;
     }
 ;
 
