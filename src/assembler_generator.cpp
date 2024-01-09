@@ -188,13 +188,13 @@ void AssemblerGenerator::moveAddrToReg(const Register& x, const Lvalue& var) {
       moveRvalueToReg(temp,
                       dynamic_cast<const Lvalue*>(accessElement)->getAddr());
 
-      if (!retVal.isFree() && x.getName() != retVal.getName()) {
+      if (!retVal.isFree() || x.getName() == retVal.getName()) {
         temp2.lock();
         asmPut(temp2);
       }
       asmLoad(temp);  // temp := *(&access_element)
       asmPut(temp);
-      if (!retVal.isFree() && x.getName() != retVal.getName()) {
+      if (!retVal.isFree() || x.getName() == retVal.getName()) {
         asmGet(temp2);
         temp2.unlock();
       }
@@ -277,14 +277,9 @@ void AssemblerGenerator::write(const Value& val) {
     moveRvalueToReg(Architecture::getRetValRegister(),
                     dynamic_cast<const Rvalue&>(val).getValue());
   else {
-    Register& temp = Architecture::getFreeRegister();
-    temp.lock();
-
-    moveAddrToReg(temp, dynamic_cast<const Lvalue&>(val));
-    asmGet(temp);
+    moveAddrToReg(Architecture::getRetValRegister(),
+                  dynamic_cast<const Lvalue&>(val));
     asmLoad(Architecture::getRetValRegister());
-
-    temp.unlock();
   }
 
   asmWrite();
