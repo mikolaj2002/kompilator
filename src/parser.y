@@ -12,6 +12,7 @@
 #include <lvalue.hpp>
 #include <lvalue_var.hpp>
 #include <lvalue_array.hpp>
+#include <procedure.hpp>
 
 // C like functions for YACC / FLEX
 static void yyerror(const char *msg);
@@ -44,6 +45,7 @@ static Compiler compiler;
     #include <lvalue_var.hpp>
     #include <lvalue_array.hpp>
     #include <loop.hpp>
+    #include <procedure.hpp>
 
     typedef struct Parser_token
     {
@@ -111,33 +113,33 @@ procedures:
 ;
 
 procedure:
-    procedure_declaration procedure_end
+    procedure_declaration procedure_head procedure_end
     {
         
     }
 ;
 
 procedure_declaration:
-    YY_PROCEDURE
+    YY_PROCEDURE YY_PIDENTIFIER 
+    {
+        Procedure proc = Procedure($2.str, compiler.getAsmGenerator().getLabelManager().createLabel("START_" + $2.str));
+        compiler.addProcedure(proc);
+    }
+;
+
+procedure_head:
+    YY_L_BRACKET args_decl YY_R_BRACKET YY_IS YY_IN
+    {
+        
+    }
+    | YY_L_BRACKET args_decl YY_R_BRACKET YY_IS declarations YY_IN
     {
 
     }
 ;
 
 procedure_end:
-    proc_head YY_IS declarations YY_IN commands YY_END
-    {
-
-    }
-    |
-    proc_head YY_IS YY_IN commands YY_END
-    {
-
-    }
-;
-
-proc_head:
-    YY_PIDENTIFIER YY_L_BRACKET args_decl YY_R_BRACKET
+    commands YY_END
     {
 
     }
@@ -160,7 +162,8 @@ main:
 main_declaration:
     YY_PROGRAM YY_IS
     {
-
+        Procedure proc = Procedure("mian_00", compiler.getAsmGenerator().getLabelManager().createLabel("START_MAIN"));
+        compiler.addProcedure(proc);
     }
 ;
 
