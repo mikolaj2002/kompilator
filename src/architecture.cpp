@@ -16,13 +16,10 @@ Architecture::addr_t Architecture::alloc(Architecture::addr_t bytes) {
 }
 
 Register& Architecture::getFreeRegister() {
-  // Register a is like eax in x86 is used to return value so it is a special
-  // register cannot return Register a as normal free register
   for (size_t i = 1; i < registersNum; ++i)
     if (registers[i].isFree()) return registers[i];
 
-  // if we reached here we have critical issue
-  std::cerr << "Critical issue, no free register" << std::endl;
+  std::cerr << "[COMPILER] No free register" << std::endl;
   exit(EXIT_FAILURE);
 }
 

@@ -1,0 +1,20 @@
+# register e, f, g, h are barely used
+# e is used only for multiplication
+# f, g are used only for division and modulo
+# each line of code uses unique set of registers
+# h is always free and and last used variable can be stored in there
+# OPTION 1: optimize use of registers in *, /, % and reserve last 2/3 registers for stroring there recetly used variables
+# OPTION 2: use as many registers as possible to store recently used variables and when reg shall be used put it back to memory (FIFO) 
+
+PROGRAM IS
+    tab[10], idx, x, y
+IN
+    x := 2;
+    y := 3;
+    tab[2] := 14;
+    tab[3] := 5;
+    idx := 5;
+    tab[idx] := tab[x] % tab[y];
+
+    WRITE tab[idx];
+END

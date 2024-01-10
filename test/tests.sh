@@ -7,7 +7,7 @@ out_file="./out.txt"
 expected_out_file="./test1_expected.txt"
 error_file="./error.txt"
 name="arithmetic operations"
-../kompilator $in_file $asm_file 2>$error_file
+../compiler $in_file $asm_file 2>$error_file
 echo -n "TEST: $name ..."
 echo "654321 3" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
 diff_res=$(diff $out_file $expected_out_file)
@@ -28,7 +28,7 @@ out_file="./out.txt"
 expected_out_file="./test2_expected.txt"
 error_file="./error.txt"
 name="array declaring and operations"
-../kompilator $in_file $asm_file 2>$error_file
+../compiler $in_file $asm_file 2>$error_file
 echo -n "TEST: $name ..."
 echo "654321 3" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
 diff_res=$(diff $out_file $expected_out_file)
@@ -49,7 +49,7 @@ out_file="./out.txt"
 expected_out_file="./test3_expected.txt"
 error_file="./error.txt"
 name="conditions"
-../kompilator $in_file $asm_file 2>$error_file
+../compiler $in_file $asm_file 2>$error_file
 echo -n "TEST: $name ..."
 echo "654321 3" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
 diff_res=$(diff $out_file $expected_out_file)
@@ -70,7 +70,7 @@ out_file="./out.txt"
 expected_out_file="./test4_expected.txt"
 error_file="./error.txt"
 name="loops"
-../kompilator $in_file $asm_file 2>$error_file
+../compiler $in_file $asm_file 2>$error_file
 echo -n "TEST: $name ..."
 echo "654321 3" | ../vm/maszyna-wirtualna-cln $asm_file | sed 's/? //g' | grep ">" | sed 's/> //g' >$out_file
 diff_res=$(diff $out_file $expected_out_file)

@@ -539,7 +539,7 @@ identifier:
 
 static void yyerror(const char* msg)
 {
-    std::cerr << "BLAD: " << msg << " w linii " << yylval.ptoken.line << std::endl;
+    std::cerr << "[PARSER] " << msg << " in line " << yylval.ptoken.line << std::endl;
 }
 
 int compile(const char* inFile, const char* outFile)
