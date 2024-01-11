@@ -1,0 +1,17 @@
+PROCEDURE testproc(notusedargument) IS
+    a
+IN
+    a := 4;
+    WRITE a;
+END
+
+PROGRAM IS
+    a
+IN
+testproc(a);
+    a := 8;
+    testproc(a);
+    testproc(a);
+    WRITE a;
+    testproc(a);
+END

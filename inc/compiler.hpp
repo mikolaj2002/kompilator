@@ -5,38 +5,46 @@
 #include <conditional_branch_manager.hpp>
 #include <cstdint>
 #include <loop_manager.hpp>
-#include <procedure.hpp>
+#include <procedure_manager.hpp>
 #include <string>
 #include <value.hpp>
-#include <variable_manager.hpp>
 
 class Compiler {
- private:
-  VariableManager varManager;
-  LoopManager loopManager;
-  AssemblerGenerator asmGenerator;
-  ConditionalBranchManager branchManager;
-  std::vector<Procedure> procedures;
+   private:
+    LoopManager loopManager;
+    AssemblerGenerator asmGenerator;
+    ConditionalBranchManager branchManager;
+    ProcedureManager procManager;
 
- public:
-  VariableManager& getVarManager() { return varManager; }
-  LoopManager& getLoopManager() { return loopManager; }
-  AssemblerGenerator& getAsmGenerator() { return asmGenerator; }
-  ConditionalBranchManager& getBranchManager() { return branchManager; }
-  void addProcurure(const Procedure& procedure) {
-    procedures.push_back(procedure);
-  }
+   public:
+    Compiler() {
+        std::string startLbael = asmGenerator.startProgram();
+        procManager.getMainProcedure().setStartLabel(startLbael);
+    }
+    ~Compiler() = default;
+    Compiler(const Compiler& from) = default;
+    Compiler& operator=(const Compiler& from) = default;
+    Compiler(Compiler&&) = default;
+    Compiler& operator=(Compiler&&) = default;
 
-  void error(const char* fmt, ...);
+    VariableManager& getVarManager() {
+        return procManager.getCurrentProcedure().getVarManager();
+    }
+    LoopManager& getLoopManager() { return loopManager; }
+    AssemblerGenerator& getAsmGenerator() { return asmGenerator; }
+    ConditionalBranchManager& getBranchManager() { return branchManager; }
+    ProcedureManager& getProcManager() { return procManager; }
 
-  void assertDeclaration(const std::string& name, uint64_t line);
-  void assertRedeclaration(const std::string& name, uint64_t line);
-  void assertUsage(const std::string& name, Value::valtype_t type,
-                   uint64_t line);
-  void assertInitalization(Value* val, uint64_t line);
-  void assertMutuable(Value* val, uint64_t line);
+    void error(const char* fmt, ...);
 
-  void initVariable(Value* val);
+    void assertDeclaration(const std::string& name, uint64_t line);
+    void assertRedeclaration(const std::string& name, uint64_t line);
+    void assertUsage(const std::string& name, Value::valtype_t type,
+                     uint64_t line);
+    void assertInitalization(Value* val, uint64_t line);
+    void assertMutuable(Value* val, uint64_t line);
+
+    void initVariable(Value* val);
 };
 
 #endif  // COMPILER_HPP

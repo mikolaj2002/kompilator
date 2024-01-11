@@ -7,6 +7,7 @@
 #include <loop_while.hpp>
 #include <lvalue.hpp>
 #include <map>
+#include <procedure.hpp>
 #include <register.hpp>
 #include <string>
 #include <value.hpp>
@@ -55,6 +56,8 @@ class AssemblerGenerator {
     void asmJump(uint64_t target);
     void asmJPos(uint64_t target);
     void asmJZero(uint32_t target);
+    void asmStrk(const Register& x);
+    void asmJumpR(const Register& x);
     void asmJumpLabel(const std::string& label);
     void asmJPosLabel(const std::string& label);
     void asmJZeroLabel(const std::string& label);
@@ -70,6 +73,8 @@ class AssemblerGenerator {
     AssemblerGenerator& operator=(const AssemblerGenerator& from) = default;
     AssemblerGenerator(AssemblerGenerator&&) = default;
     AssemblerGenerator& operator=(AssemblerGenerator&&) = default;
+
+    std::string startProgram();
 
     void load(const Register& x, const Value& val);
     void store(const Lvalue& var, const Register& x);
@@ -98,6 +103,10 @@ class AssemblerGenerator {
 
     void ifInsertJumpPoint(const ConditionalBranch& branch);
     void ifSkipElse(const ConditionalBranch& branch);
+
+    void createProcedure(Procedure& proc);
+    void endProcedure(Procedure& proc);
+    void callProcedure(Procedure& proc);
 
     void finishProgram();
 

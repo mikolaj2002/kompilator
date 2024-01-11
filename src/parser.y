@@ -21,6 +21,8 @@ int yylex(void);
 
 extern FILE *yyin;
 
+#define YAC_DEBUG // TEST ONLY
+
 #ifdef YAC_DEBUG
 #define pr_dbg(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -102,9 +104,13 @@ program_all:
 ;
 
 procedures:
-    procedures procedure
+    procedures YY_PROCEDURE proc_head YY_IS declarations YY_IN commands YY_END
     {
-
+        compiler.getAsmGenerator().endProcedure(compiler.getProcManager().getCurrentProcedure()); 
+    }
+    | procedures YY_PROCEDURE proc_head YY_IS YY_IN commands YY_END
+    {
+        compiler.getAsmGenerator().endProcedure(compiler.getProcManager().getCurrentProcedure()); 
     }
     | %empty
     {
@@ -112,48 +118,34 @@ procedures:
     }
 ;
 
-procedure:
-    procedure_declaration procedure_head procedure_end
+proc_head:
+    YY_PIDENTIFIER YY_L_BRACKET args_decl YY_R_BRACKET
     {
-        
-    }
-;
+        Procedure proc = Procedure(*($1.str), compiler.getAsmGenerator().getLabelManager().createLabel(*($1.str)));
+        compiler.getProcManager().addProcedure(proc);
+        compiler.getAsmGenerator().createProcedure(proc);
 
-procedure_declaration:
-    YY_PROCEDURE YY_PIDENTIFIER 
-    {
-        Procedure proc = Procedure($2.str, compiler.getAsmGenerator().getLabelManager().createLabel("START_" + $2.str));
-        compiler.addProcedure(proc);
-    }
-;
-
-procedure_head:
-    YY_L_BRACKET args_decl YY_R_BRACKET YY_IS YY_IN
-    {
-        
-    }
-    | YY_L_BRACKET args_decl YY_R_BRACKET YY_IS declarations YY_IN
-    {
-
-    }
-;
-
-procedure_end:
-    commands YY_END
-    {
-
+        delete $1.str;
     }
 ;
 
 proc_call:
     YY_PIDENTIFIER YY_L_BRACKET args YY_R_BRACKET
     {
+        Procedure proc = compiler.getProcManager().getProcedure(*($1.str));
+        compiler.getAsmGenerator().callProcedure(proc);
 
+        delete $1.str;
     }
 ;
 
 main:
-    main_declaration main_end
+    main_declaration declarations YY_IN commands YY_END
+    {
+
+    }
+    |
+    main_declaration YY_IN commands YY_END
     {
 
     }
@@ -162,19 +154,8 @@ main:
 main_declaration:
     YY_PROGRAM YY_IS
     {
-        Procedure proc = Procedure("mian_00", compiler.getAsmGenerator().getLabelManager().createLabel("START_MAIN"));
-        compiler.addProcedure(proc);
-    }
-;
-
-main_end:
-    declarations YY_IN commands YY_END
-    {
-
-    }
-    | YY_IN commands YY_END
-    {
-
+        compiler.getProcManager().setMainProcedure();
+        compiler.getAsmGenerator().createProcedure(compiler.getProcManager().getCurrentProcedure());
     }
 ;
 
