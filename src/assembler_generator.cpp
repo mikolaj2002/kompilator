@@ -176,6 +176,9 @@ void AssemblerGenerator::moveRvalueToReg(const Register& x, uint64_t val) {
 void AssemblerGenerator::moveAddrToReg(const Register& x, const Lvalue& var) {
     if (var.getType() == Value::VALTYPE_LVALUE_VAR)
         moveRvalueToReg(x, dynamic_cast<const LvalueVar&>(var).getAddr());
+    else if (var.getType() == Value::VALTYPE_POINTER_VAR ||
+             var.getType() == Value::VALTYPE_POINTER_ARRAY)
+        moveRvalueToReg(x, dynamic_cast<const LvaluePointer&>(var).getAddr());
     else  // Array, t[a] or t[10]
     {
         const LvalueArray& arr = dynamic_cast<const LvalueArray&>(var);
@@ -234,7 +237,12 @@ void AssemblerGenerator::load(const Register& x, const Value& val) {
     if (val.getType() == Value::VALTYPE_RVALUE)
         moveRvalueToReg(x, dynamic_cast<const Rvalue&>(val).getValue());
     else {
-        moveAddrToReg(x, dynamic_cast<const Lvalue&>(val));
+        if (val.getType() == Value::VALTYPE_POINTER_VAR ||
+            val.getType() == Value::VALTYPE_POINTER_ARRAY)
+            loadPointer(x, dynamic_cast<const LvaluePointer&>(val));
+        else
+            moveAddrToReg(x, dynamic_cast<const Lvalue&>(val));
+
         Register& retVal = Architecture::getRetValRegister();
         Register& temp = Architecture::getFreeRegister();
         if (!retVal.isFree() && x.getName() != retVal.getName()) {
@@ -250,13 +258,61 @@ void AssemblerGenerator::load(const Register& x, const Value& val) {
     }
 }
 
+/*
+    TODO: obsłużyć pobieranie tablic w parser.y, zmienić przekzywanie argumentów
+   NIE MA TERAZ ROZRÓŻNIENIA NA TABLICE I ZMIENNE
+*/
+
 void AssemblerGenerator::store(const Lvalue& var, const Register& x) {
     Register& temp = Architecture::getFreeRegister();
     temp.lock();
     Register& temp2 = Architecture::getFreeRegister();
     Register& retVal = Architecture::getRetValRegister();
 
-    // temp := &var
+    if (var.getType() == Value::VALTYPE_POINTER_VAR ||
+        var.getType() == Value::VALTYPE_POINTER_ARRAY) {
+        loadPointer(temp, dynamic_cast<const LvaluePointer&>(var));
+    } else
+        moveAddrToReg(temp, var);
+
+    if (!retVal.isFree() && x.getName() != retVal.getName()) {
+        temp2.lock();
+        asmPut(temp2);
+    }
+    if (x.getName() != retVal.getName()) asmGet(x);
+    asmStore(temp);
+    if (!retVal.isFree() && x.getName() != retVal.getName()) {
+        asmGet(temp2);
+        temp2.unlock();
+    }
+
+    temp.unlock();
+}
+
+void AssemblerGenerator::loadPointer(const Register& x,
+                                     const LvaluePointer& val) {
+    moveAddrToReg(x, dynamic_cast<const Lvalue&>(val));
+    Register& retVal = Architecture::getRetValRegister();
+    Register& temp = Architecture::getFreeRegister();
+    if (!retVal.isFree() && x.getName() != retVal.getName()) {
+        temp.lock();
+        asmPut(temp);
+    }
+    asmLoad(x);
+    if (x.getName() != retVal.getName()) asmPut(x);
+    if (!retVal.isFree() && x.getName() != retVal.getName()) {
+        asmGet(temp);
+        temp.unlock();
+    }
+}
+
+void AssemblerGenerator::storePointer(const LvaluePointer& var,
+                                      const Register& x) {
+    Register& temp = Architecture::getFreeRegister();
+    temp.lock();
+    Register& temp2 = Architecture::getFreeRegister();
+    Register& retVal = Architecture::getRetValRegister();
+
     moveAddrToReg(temp, var);
 
     if (!retVal.isFree() && x.getName() != retVal.getName()) {
@@ -274,27 +330,19 @@ void AssemblerGenerator::store(const Lvalue& var, const Register& x) {
 }
 
 void AssemblerGenerator::read(const Lvalue& var) {
-    Register& temp = Architecture::getFreeRegister();
-    temp.lock();
-
-    // temp := &var
-    moveAddrToReg(temp, var);
-
     asmRead();
-    asmStore(temp);
-
-    temp.unlock();
+    Architecture::getRetValRegister().lock();
+    store(var, Architecture::getRetValRegister());
+    Architecture::getRetValRegister().unlock();
 }
 
 void AssemblerGenerator::write(const Value& val) {
     if (val.getType() == Value::VALTYPE_RVALUE)
         moveRvalueToReg(Architecture::getRetValRegister(),
                         dynamic_cast<const Rvalue&>(val).getValue());
-    else {
-        moveAddrToReg(Architecture::getRetValRegister(),
-                      dynamic_cast<const Lvalue&>(val));
-        asmLoad(Architecture::getRetValRegister());
-    }
+    else
+        load(Architecture::getRetValRegister(),
+             dynamic_cast<const Lvalue&>(val));
 
     asmWrite();
 }
@@ -304,20 +352,15 @@ void AssemblerGenerator::add(const Value& val1, const Value& val2) {
     temp.lock();
     if (val1.getType() == Value::VALTYPE_RVALUE)
         moveRvalueToReg(temp, dynamic_cast<const Rvalue&>(val1).getValue());
-    else {
-        moveAddrToReg(temp, dynamic_cast<const Lvalue&>(val1));
-        asmLoad(temp);
-        asmPut(temp);
-    }
+    else
+        load(temp, dynamic_cast<const Lvalue&>(val1));
 
     Register& retVal = Architecture::getRetValRegister();
     retVal.lock();
     if (val2.getType() == Value::VALTYPE_RVALUE)
         moveRvalueToReg(retVal, dynamic_cast<const Rvalue&>(val2).getValue());
-    else {
-        moveAddrToReg(retVal, dynamic_cast<const Lvalue&>(val2));
-        asmLoad(retVal);
-    }
+    else
+        load(retVal, dynamic_cast<const Lvalue&>(val2));
 
     asmAdd(temp);
     temp.unlock();
@@ -328,20 +371,15 @@ void AssemblerGenerator::sub(const Value& val1, const Value& val2) {
     temp.lock();
     if (val1.getType() == Value::VALTYPE_RVALUE)
         moveRvalueToReg(temp, dynamic_cast<const Rvalue&>(val1).getValue());
-    else {
-        moveAddrToReg(temp, dynamic_cast<const Lvalue&>(val1));
-        asmLoad(temp);
-        asmPut(temp);
-    }
+    else
+        load(temp, dynamic_cast<const Lvalue&>(val1));
 
     Register& retVal = Architecture::getRetValRegister();
     retVal.lock();
     if (val2.getType() == Value::VALTYPE_RVALUE)
         moveRvalueToReg(retVal, dynamic_cast<const Rvalue&>(val2).getValue());
-    else {
-        moveAddrToReg(retVal, dynamic_cast<const Lvalue&>(val2));
-        asmLoad(retVal);
-    }
+    else
+        load(retVal, dynamic_cast<const Lvalue&>(val2));
 
     asmSub(temp);
     temp.unlock();
@@ -640,8 +678,6 @@ void AssemblerGenerator::mod(const Value& val1, const Value& val2) {
     asmSub(temp4);
     asmJZeroLabel(label_reta);
     asmJumpLabel(label_start_algo);
-
-    // TODO: lock retval in the end (same above) !!!!!!!!!!!!!!!!
 
     labelManager.insertLabel(label_ret0);
     asmRst(temp4);

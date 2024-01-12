@@ -11,8 +11,10 @@
 #include <rvalue.hpp>
 #include <lvalue.hpp>
 #include <lvalue_var.hpp>
+#include <lvalue_pointer.hpp>
 #include <lvalue_array.hpp>
 #include <procedure.hpp>
+#include <string>
 
 // C like functions for YACC / FLEX
 static void yyerror(const char *msg);
@@ -20,8 +22,6 @@ static int yyparse(void);
 int yylex(void);
 
 extern FILE *yyin;
-
-#define YAC_DEBUG // TEST ONLY
 
 #ifdef YAC_DEBUG
 #define pr_dbg(...) fprintf(stderr, __VA_ARGS__)
@@ -31,6 +31,8 @@ extern FILE *yyin;
 
 /* Global variables */
 static Compiler compiler;
+size_t argsCounter = 0;
+std::string calledProcedureName;
 
 %}
 
@@ -45,6 +47,7 @@ static Compiler compiler;
     #include <rvalue.hpp>
     #include <lvalue.hpp>
     #include <lvalue_var.hpp>
+    #include <lvalue_pointer.hpp>
     #include <lvalue_array.hpp>
     #include <loop.hpp>
     #include <procedure.hpp>
@@ -55,7 +58,6 @@ static Compiler compiler;
         uint64_t line;
         std::string* str; // Yacc needs pointer instead of class
     } Parser_token;
-
 }
 
 %union
@@ -104,11 +106,11 @@ program_all:
 ;
 
 procedures:
-    procedures YY_PROCEDURE proc_head YY_IS declarations YY_IN commands YY_END
+    procedures proc_name YY_L_BRACKET args_decl YY_R_BRACKET YY_IS declarations YY_IN commands YY_END
     {
         compiler.getAsmGenerator().endProcedure(compiler.getProcManager().getCurrentProcedure()); 
     }
-    | procedures YY_PROCEDURE proc_head YY_IS YY_IN commands YY_END
+    | procedures proc_name YY_L_BRACKET args_decl YY_R_BRACKET YY_IS YY_IN commands YY_END
     {
         compiler.getAsmGenerator().endProcedure(compiler.getProcManager().getCurrentProcedure()); 
     }
@@ -118,26 +120,33 @@ procedures:
     }
 ;
 
-proc_head:
-    YY_PIDENTIFIER YY_L_BRACKET args_decl YY_R_BRACKET
+proc_name:
+    YY_PROCEDURE YY_PIDENTIFIER
     {
-        Procedure proc = Procedure(*($1.str), compiler.getAsmGenerator().getLabelManager().createLabel(*($1.str)));
+        Procedure proc = Procedure(*($2.str), compiler.getAsmGenerator().getLabelManager().createLabel(*($2.str)));
         compiler.getProcManager().addProcedure(proc);
         compiler.getAsmGenerator().createProcedure(proc);
 
-        delete $1.str;
+        delete $2.str;
     }
 ;
 
 proc_call:
-    YY_PIDENTIFIER YY_L_BRACKET args YY_R_BRACKET
+    proc_called_name YY_L_BRACKET args YY_R_BRACKET
     {
-        Procedure proc = compiler.getProcManager().getProcedure(*($1.str));
+        Procedure proc = compiler.getProcManager().getProcedure(calledProcedureName);
         compiler.getAsmGenerator().callProcedure(proc);
+    }
+;
+
+proc_called_name:
+    YY_PIDENTIFIER
+    {
+        argsCounter = 0;
+        calledProcedureName = *($1.str);
 
         delete $1.str;
     }
-;
 
 main:
     main_declaration declarations YY_IN commands YY_END
@@ -350,30 +359,72 @@ declarations:
 args_decl:
     args_decl YY_COMMA YY_PIDENTIFIER
     {
-        
+        Lvalue* var = new LvaluePointer(*($3.str), true, Value::VALTYPE_POINTER_VAR);
+        compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($3.str));
+        compiler.getVarManager().declareVariable(var);
+
+        delete $3.str;
     }
     | args_decl YY_COMMA YY_TABLE YY_PIDENTIFIER
     {
+        Lvalue* var = new LvaluePointer(*($4.str), true, Value::VALTYPE_POINTER_ARRAY);
+        compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($4.str));
+        compiler.getVarManager().declareVariable(var);
 
+        delete $4.str;
     }
     | YY_PIDENTIFIER
     {
+        Lvalue* var = new LvaluePointer(*($1.str), true, Value::VALTYPE_POINTER_VAR);
+        compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($1.str));
+        compiler.getVarManager().declareVariable(var);
 
+        delete $1.str;
     }
     | YY_TABLE YY_PIDENTIFIER
     {
+        Lvalue* var = new LvaluePointer(*($2.str), true, Value::VALTYPE_POINTER_ARRAY);
+        compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($2.str));
+        compiler.getVarManager().declareVariable(var);
 
+        delete $2.str;
     }
 ;
 
 args:
     args YY_COMMA YY_PIDENTIFIER
     {
+        Lvalue* lval = compiler.getVarManager().getVariable(*($3.str)).get();
+        Register& retval = Architecture::getRetValRegister();
+        if (lval->getType() == Value::VALTYPE_LVALUE_VAR)
+            compiler.getAsmGenerator().load(retval, Rvalue(lval->getAddr()));
+        else
+            compiler.getAsmGenerator().loadPointer(retval, *(dynamic_cast<LvaluePointer*>(lval)));
 
+        Procedure proc = compiler.getProcManager().getProcedure(calledProcedureName);
+        LvaluePointer* pointer = dynamic_cast<LvaluePointer*>(
+            proc.getVarManager().getVariable(proc.getArgumentNames()[argsCounter]).get());
+        argsCounter++;
+        compiler.getAsmGenerator().storePointer(*pointer, retval);
+
+        delete $3.str;
     }
     | YY_PIDENTIFIER
     {
+        Lvalue* lval = compiler.getVarManager().getVariable(*($1.str)).get();
+        Register& retval = Architecture::getRetValRegister();
+        if (lval->getType() == Value::VALTYPE_LVALUE_VAR)
+            compiler.getAsmGenerator().load(retval, Rvalue(lval->getAddr()));
+        else
+            compiler.getAsmGenerator().loadPointer(retval, *(dynamic_cast<LvaluePointer*>(lval)));
 
+        Procedure proc = compiler.getProcManager().getProcedure(calledProcedureName);
+        LvaluePointer* pointer = dynamic_cast<LvaluePointer*>(
+            proc.getVarManager().getVariable(proc.getArgumentNames()[argsCounter]).get());
+        argsCounter++;
+        compiler.getAsmGenerator().storePointer(*pointer, retval);
+
+        delete $1.str;
     }
 ;
 
@@ -489,8 +540,11 @@ value:
 identifier:
     YY_PIDENTIFIER
     {
-        LvalueVar* var = dynamic_cast<LvalueVar*>(compiler.getVarManager().getVariable(*($1.str)).get());
-        $$ = new LvalueVar(*var);
+        Lvalue* var = compiler.getVarManager().getVariable(*($1.str)).get();
+        if (var->getType() == Value::VALTYPE_LVALUE_VAR)
+            $$ = new LvalueVar(*(dynamic_cast<LvalueVar*>(var)));
+        else
+            $$ = new LvaluePointer(*(dynamic_cast<LvaluePointer*>(var)));
 
         delete $1.str;
     }

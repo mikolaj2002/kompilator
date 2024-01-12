@@ -12,7 +12,9 @@ class Value {
         VALTYPE_RVALUE,
         VALTYPE_LVALUE,
         VALTYPE_LVALUE_VAR,
-        VALTYPE_LVALUE_ARRAY
+        VALTYPE_LVALUE_ARRAY,
+        VALTYPE_POINTER_VAR,
+        VALTYPE_POINTER_ARRAY
     } valtype_t;
 
    protected:

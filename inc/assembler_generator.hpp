@@ -6,6 +6,7 @@
 #include <loop_until.hpp>
 #include <loop_while.hpp>
 #include <lvalue.hpp>
+#include <lvalue_pointer.hpp>
 #include <map>
 #include <procedure.hpp>
 #include <register.hpp>
@@ -78,6 +79,8 @@ class AssemblerGenerator {
 
     void load(const Register& x, const Value& val);
     void store(const Lvalue& var, const Register& x);
+    void loadPointer(const Register& x, const LvaluePointer& val);
+    void storePointer(const LvaluePointer& var, const Register& x);
 
     void read(const Lvalue& var);
     void write(const Value& val);
