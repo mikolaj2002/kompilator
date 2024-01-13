@@ -16,7 +16,8 @@ void VariableManager::undeclareVariable(Lvalue* val) {
 
 std::shared_ptr<Lvalue>& VariableManager::getVariable(const std::string& name) {
     if (!isVariableDeclared(name)) {
-        std::cerr << "Critical issue, getting undeclare variable" << std::endl;
+        std::cerr << "Critical issue, getting undeclare variable " << name
+                  << std::endl;
         exit(EXIT_FAILURE);
     }
 

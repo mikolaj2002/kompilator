@@ -11,8 +11,9 @@
 #include <rvalue.hpp>
 #include <lvalue.hpp>
 #include <lvalue_var.hpp>
-#include <lvalue_pointer.hpp>
+#include <lvalue_pointer_var.hpp>
 #include <lvalue_array.hpp>
+#include <lvalue_pointer_arr.hpp>
 #include <procedure.hpp>
 #include <string>
 
@@ -47,8 +48,9 @@ std::string calledProcedureName;
     #include <rvalue.hpp>
     #include <lvalue.hpp>
     #include <lvalue_var.hpp>
-    #include <lvalue_pointer.hpp>
+    #include <lvalue_pointer_var.hpp>
     #include <lvalue_array.hpp>
+    #include <lvalue_pointer_arr.hpp>
     #include <loop.hpp>
     #include <procedure.hpp>
 
@@ -359,7 +361,7 @@ declarations:
 args_decl:
     args_decl YY_COMMA YY_PIDENTIFIER
     {
-        Lvalue* var = new LvaluePointer(*($3.str), true, Value::VALTYPE_POINTER_VAR);
+        Lvalue* var = new LvaluePointerVar(*($3.str), true);
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($3.str));
         compiler.getVarManager().declareVariable(var);
 
@@ -367,7 +369,7 @@ args_decl:
     }
     | args_decl YY_COMMA YY_TABLE YY_PIDENTIFIER
     {
-        Lvalue* var = new LvaluePointer(*($4.str), true, Value::VALTYPE_POINTER_ARRAY);
+        Lvalue* var = new LvaluePointerArray(*($4.str));
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($4.str));
         compiler.getVarManager().declareVariable(var);
 
@@ -375,7 +377,7 @@ args_decl:
     }
     | YY_PIDENTIFIER
     {
-        Lvalue* var = new LvaluePointer(*($1.str), true, Value::VALTYPE_POINTER_VAR);
+        Lvalue* var = new LvaluePointerVar(*($1.str), true);
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($1.str));
         compiler.getVarManager().declareVariable(var);
 
@@ -383,7 +385,7 @@ args_decl:
     }
     | YY_TABLE YY_PIDENTIFIER
     {
-        Lvalue* var = new LvaluePointer(*($2.str), true, Value::VALTYPE_POINTER_ARRAY);
+        Lvalue* var = new LvaluePointerArray(*($2.str));
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($2.str));
         compiler.getVarManager().declareVariable(var);
 
@@ -396,7 +398,7 @@ args:
     {
         Lvalue* lval = compiler.getVarManager().getVariable(*($3.str)).get();
         Register& retval = Architecture::getRetValRegister();
-        if (lval->getType() == Value::VALTYPE_LVALUE_VAR)
+        if (lval->getType() == Value::VALTYPE_LVALUE_VAR || lval->getType() == Value::VALTYPE_LVALUE_ARRAY)
             compiler.getAsmGenerator().load(retval, Rvalue(lval->getAddr()));
         else
             compiler.getAsmGenerator().loadPointer(retval, *(dynamic_cast<LvaluePointer*>(lval)));
@@ -413,7 +415,7 @@ args:
     {
         Lvalue* lval = compiler.getVarManager().getVariable(*($1.str)).get();
         Register& retval = Architecture::getRetValRegister();
-        if (lval->getType() == Value::VALTYPE_LVALUE_VAR)
+        if (lval->getType() == Value::VALTYPE_LVALUE_VAR || lval->getType() == Value::VALTYPE_LVALUE_ARRAY)
             compiler.getAsmGenerator().load(retval, Rvalue(lval->getAddr()));
         else
             compiler.getAsmGenerator().loadPointer(retval, *(dynamic_cast<LvaluePointer*>(lval)));
@@ -544,28 +546,42 @@ identifier:
         if (var->getType() == Value::VALTYPE_LVALUE_VAR)
             $$ = new LvalueVar(*(dynamic_cast<LvalueVar*>(var)));
         else
-            $$ = new LvaluePointer(*(dynamic_cast<LvaluePointer*>(var)));
+            $$ = new LvaluePointerVar(*(dynamic_cast<LvaluePointerVar*>(var)));
 
         delete $1.str;
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
-        LvalueArray* array = dynamic_cast<LvalueArray*>(compiler.getVarManager().getVariable(*($1.str)).get());
-        auto val = std::shared_ptr<Value>(new Rvalue($3.val));
+        Lvalue *array = compiler.getVarManager().getVariable(*($1.str)).get();
+        Lvalue *forward;
+        if (array->getType() == Value::VALTYPE_LVALUE_ARRAY) {
+            forward =  new LvalueArray(*dynamic_cast<LvalueArray*>(array));
+            auto val = std::shared_ptr<Value>(new Rvalue($3.val));
+            dynamic_cast<LvalueArray*>(forward)->setAccessElement(val);
+        } else {
+            forward = new LvaluePointerArray(*dynamic_cast<LvaluePointerArray*>(array));
+            auto val = std::shared_ptr<Value>(new Rvalue($3.val));
+            dynamic_cast<LvaluePointerArray*>(forward)->setAccessElement(val);
+        }
 
-        LvalueArray* forward =  new LvalueArray(*array);
-        forward->setAccessElement(val);
         $$ = forward;
 
         delete $1.str;
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_PIDENTIFIER YY_R_SQUARE_BRACKET
     {
-        LvalueArray* array = dynamic_cast<LvalueArray*>(compiler.getVarManager().getVariable(*($1.str)).get());
-        auto var = compiler.getVarManager().getVariable(*($3.str));
+        Lvalue *array = compiler.getVarManager().getVariable(*($1.str)).get();
+        Lvalue *forward;
+        if (array->getType() == Value::VALTYPE_LVALUE_ARRAY) {
+            forward =  new LvalueArray(*dynamic_cast<LvalueArray*>(array));
+            auto var = compiler.getVarManager().getVariable(*($3.str));
+            dynamic_cast<LvalueArray*>(forward)->setAccessElement(var);
+        } else {
+            forward = new LvaluePointerArray(*dynamic_cast<LvaluePointerArray*>(array));
+            auto var = compiler.getVarManager().getVariable(*($3.str));
+            dynamic_cast<LvaluePointerArray*>(forward)->setAccessElement(var);
+        }
 
-        LvalueArray* forward = new LvalueArray(*array);
-        forward->setAccessElement(var);
         $$ = forward;
 
         delete $1.str;

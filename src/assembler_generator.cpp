@@ -4,6 +4,8 @@
 #include <bitset>
 #include <lvalue.hpp>
 #include <lvalue_array.hpp>
+#include <lvalue_pointer_arr.hpp>
+#include <lvalue_pointer_var.hpp>
 #include <lvalue_var.hpp>
 #include <rvalue.hpp>
 
@@ -174,27 +176,39 @@ void AssemblerGenerator::moveRvalueToReg(const Register& x, uint64_t val) {
 }
 
 void AssemblerGenerator::moveAddrToReg(const Register& x, const Lvalue& var) {
-    if (var.getType() == Value::VALTYPE_LVALUE_VAR)
-        moveRvalueToReg(x, dynamic_cast<const LvalueVar&>(var).getAddr());
-    else if (var.getType() == Value::VALTYPE_POINTER_VAR ||
-             var.getType() == Value::VALTYPE_POINTER_ARRAY)
-        moveRvalueToReg(x, dynamic_cast<const LvaluePointer&>(var).getAddr());
-    else  // Array, t[a] or t[10]
-    {
-        const LvalueArray& arr = dynamic_cast<const LvalueArray&>(var);
-        moveRvalueToReg(x, arr.getAddr());  // x := &arr[0]
+    moveRvalueToReg(x, dynamic_cast<const Lvalue&>(var).getAddr());
 
+    if (var.getType() == Value::VALTYPE_LVALUE_ARRAY ||
+        var.getType() == Value::VALTYPE_POINTER_ARRAY) {
         Register& temp = Architecture::getFreeRegister();
         temp.lock();
-
         Register& temp2 = Architecture::getFreeRegister();
         Register& retVal = Architecture::getRetValRegister();
 
-        const Value* accessElement = arr.getAccessElement();
+        const Value* accessElement;
+        if (var.getType() == Value::VALTYPE_LVALUE_ARRAY) {
+            const LvalueArray& arr = dynamic_cast<const LvalueArray&>(var);
+            accessElement = arr.getAccessElement();
+        } else {
+            if (!retVal.isFree() && x.getName() != retVal.getName()) {
+                temp2.lock();
+                asmPut(temp2);
+            }
+            asmLoad(x);
+            if (x.getName() != retVal.getName()) asmPut(x);
+            if (!retVal.isFree() && x.getName() != retVal.getName()) {
+                asmGet(temp2);
+                temp2.unlock();
+            }
+
+            const LvaluePointerArray& arr =
+                dynamic_cast<const LvaluePointerArray&>(var);
+            accessElement = arr.getAccessElement();
+        }
+
         if (accessElement->getType() == Value::VALTYPE_RVALUE)
             moveRvalueToReg(
                 temp, dynamic_cast<const Rvalue*>(accessElement)->getValue());
-
         else {
             moveRvalueToReg(
                 temp, dynamic_cast<const Lvalue*>(accessElement)->getAddr());
@@ -204,6 +218,9 @@ void AssemblerGenerator::moveAddrToReg(const Register& x, const Lvalue& var) {
                 asmPut(temp2);
             }
             asmLoad(temp);  // temp := *(&access_element)
+            if (accessElement->getType() == Value::VALTYPE_POINTER_VAR) {
+                asmLoad(retVal);
+            }
             asmPut(temp);
             if (!retVal.isFree() || x.getName() == retVal.getName()) {
                 asmGet(temp2);
@@ -258,11 +275,6 @@ void AssemblerGenerator::load(const Register& x, const Value& val) {
     }
 }
 
-/*
-    TODO: obsłużyć pobieranie tablic w parser.y, zmienić przekzywanie argumentów
-   NIE MA TERAZ ROZRÓŻNIENIA NA TABLICE I ZMIENNE
-*/
-
 void AssemblerGenerator::store(const Lvalue& var, const Register& x) {
     Register& temp = Architecture::getFreeRegister();
     temp.lock();
@@ -291,18 +303,20 @@ void AssemblerGenerator::store(const Lvalue& var, const Register& x) {
 
 void AssemblerGenerator::loadPointer(const Register& x,
                                      const LvaluePointer& val) {
-    moveAddrToReg(x, dynamic_cast<const Lvalue&>(val));
+    moveAddrToReg(x, val);
     Register& retVal = Architecture::getRetValRegister();
     Register& temp = Architecture::getFreeRegister();
-    if (!retVal.isFree() && x.getName() != retVal.getName()) {
-        temp.lock();
-        asmPut(temp);
-    }
-    asmLoad(x);
-    if (x.getName() != retVal.getName()) asmPut(x);
-    if (!retVal.isFree() && x.getName() != retVal.getName()) {
-        asmGet(temp);
-        temp.unlock();
+    if (val.getType() == Value::VALTYPE_POINTER_VAR) {
+        if (!retVal.isFree() && x.getName() != retVal.getName()) {
+            temp.lock();
+            asmPut(temp);
+        }
+        asmLoad(x);
+        if (x.getName() != retVal.getName()) asmPut(x);
+        if (!retVal.isFree() && x.getName() != retVal.getName()) {
+            asmGet(temp);
+            temp.unlock();
+        }
     }
 }
 
@@ -313,7 +327,7 @@ void AssemblerGenerator::storePointer(const LvaluePointer& var,
     Register& temp2 = Architecture::getFreeRegister();
     Register& retVal = Architecture::getRetValRegister();
 
-    moveAddrToReg(temp, var);
+    moveRvalueToReg(temp, var.getAddr());
 
     if (!retVal.isFree() && x.getName() != retVal.getName()) {
         temp2.lock();
