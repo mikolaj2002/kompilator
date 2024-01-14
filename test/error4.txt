@@ -1,4 +1,5 @@
-# błąd: niewłaściwe użycie tablicy w linii 12
+# Error4. Incorrect usage of array a in line 13
+
 PROCEDURE pa(T a, b) IS
  c[5],d
 IN

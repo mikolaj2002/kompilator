@@ -1,4 +1,5 @@
-# błąd: niewłaściwe użycie procedudy pa w linii 6
+# Error 7. Using recursion in line 6
+
 PROCEDURE pa(T a, b) IS
  c[5],d
 IN

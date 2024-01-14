@@ -37,10 +37,15 @@ void Compiler::assertUsage(const std::string& name, Value::valtype_t type,
          lval->getType() != Value::VALTYPE_LVALUE_VAR) ||
         (type == Value::VALTYPE_LVALUE_ARRAY &&
          lval->getType() != Value::VALTYPE_POINTER_ARRAY &&
-         lval->getType() != Value::VALTYPE_LVALUE_ARRAY))
-        this->error("[COMPILER] Incorrect usage of variable %s in line %" PRIu64
-                    "\n",
-                    name.c_str(), line);
+         lval->getType() != Value::VALTYPE_LVALUE_ARRAY)) {
+        std::string typeStr = "variable";
+        if (lval->getType() == Value::VALTYPE_LVALUE_ARRAY ||
+            lval->getType() == Value::VALTYPE_POINTER_ARRAY)
+            typeStr = "array";
+
+        this->error("[COMPILER] Incorrect usage of %s %s in line %" PRIu64 "\n",
+                    typeStr.c_str(), name.c_str(), line);
+    }
 }
 
 void Compiler::assertInitalization(Value* val, uint64_t line) {

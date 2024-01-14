@@ -1,4 +1,5 @@
-# błąd: niewłaściwe parametry procedury pa w linii 13
+# Error5. Incorrect procedure pa call parameter in line 14
+
 PROCEDURE pa(T a, b) IS
  c[5],d
 IN

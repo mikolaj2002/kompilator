@@ -413,3 +413,111 @@ fi
 
 rm -f $out_file
 rm -f $error_file
+
+# Error3. Error: Incoorent usage of array
+in_file="./error3.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./error3_expected.txt"
+name="Incoorent usage of array"
+echo -n "TEST: $name ..."
+../compiler $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Error4. Error: Incorect usage of array
+in_file="./error4.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./error4_expected.txt"
+name="Incorect usage of array"
+echo -n "TEST: $name ..."
+../compiler $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Error5. Error: Incorect procedure call parameter
+in_file="./error5.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./error5_expected.txt"
+name="Incorect procedure call parameter"
+echo -n "TEST: $name ..."
+../compiler $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Error6. Error: Redeclaration of variable
+in_file="./error6.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./error6_expected.txt"
+name="Redeclaration of variable"
+echo -n "TEST: $name ..."
+../compiler $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Error7. Error: Using recursion
+in_file="./error7.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./error7_expected.txt"
+name="Using recursion"
+echo -n "TEST: $name ..."
+../compiler $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file
+
+# Error8. Error: Undeclared procedure
+in_file="./error8.txt"
+out_file="./out.txt"
+error_file="./error.txt"
+expected_error_file="./error8_expected.txt"
+name="Undeclared procedure"
+echo -n "TEST: $name ..."
+../compiler $in_file $out_file 2>$error_file
+diff_res=$(diff $error_file $expected_error_file)
+if [ $? -eq 1 ] || [ "$diff_res" ]; then
+    echo -e " \033[0;31mFAILED\033[0m"
+else
+    echo -e " \033[0;32mPASSED\033[0m"
+fi
+
+rm -f $out_file
+rm -f $error_file

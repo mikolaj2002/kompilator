@@ -1,4 +1,5 @@
-# błąd: powtórne użycie identyfikatora a w linii 2
+# Error6. Redeclaration of variable a in line 5
+
 PROCEDURE pa(T a, b) IS
  c[5], a
 IN

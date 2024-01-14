@@ -1,0 +1,1 @@
+[COMPILER] Incorrect usage of array c in line 6

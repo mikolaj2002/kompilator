@@ -1,5 +1,5 @@
-# błąd: niewłaściwe użycie tablicy w linii 5
-# TODO: zrobić rozróżnienie przy błędnym użyciu zmiennej/tablicy
+# Error3. Incorrect usage of array c in line 6
+
 PROCEDURE pa(T a, b) IS
  c[5],d
 IN
