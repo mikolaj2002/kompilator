@@ -1,0 +1,16 @@
+# Error2. Use of uninitialized variable d in line 7
+
+PROCEDURE pa(T a, b) IS
+ c[5],d
+IN
+  c[b]:=b;
+  a[d]:=c[d];
+END
+
+PROGRAM IS
+ a[10],b
+IN
+  READ b;
+  pa(a,b);
+  WRITE a[b];
+END

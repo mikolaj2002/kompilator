@@ -1,0 +1,17 @@
+# Error1. Undeclared variable e in line 6
+
+PROCEDURE pa(T a, b) IS
+ c[5],d
+IN
+  d:=e;
+  a:=c+d;
+END
+
+PROGRAM IS
+ a[10],b
+IN
+  READ b;
+  pa(a,b);
+  WRITE a[b];
+END
+

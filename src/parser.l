@@ -43,7 +43,7 @@ WHITE_C                         [ \t]
 
 %%
 
-#.*$                        {   pr_dbg("LEX: Comment\n"); ++lines;                }       
+#.*$                        {   pr_dbg("LEX: Comment\n");                         }       
 
 {WHITE_C}+                  {   pr_dbg("LEX: White Character\n");                 }
 ^{WHITE_C}*\n               {   pr_dbg("LEX: New line\n"); ++lines;               }

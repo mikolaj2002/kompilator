@@ -17,18 +17,11 @@
 #include <procedure.hpp>
 #include <string>
 
-// C like functions for YACC / FLEX
 static void yyerror(const char *msg);
 static int yyparse(void);
 int yylex(void);
 
 extern FILE *yyin;
-
-#ifdef YAC_DEBUG
-#define pr_dbg(...) fprintf(stderr, __VA_ARGS__)
-#else
-#define pr_dbg(...)
-#endif
 
 /* Global variables */
 static Compiler compiler;
@@ -125,6 +118,8 @@ procedures:
 proc_name:
     YY_PROCEDURE YY_PIDENTIFIER
     {
+        compiler.assertProcedureRedeclaration(*($2.str), yylval.ptoken.line);
+
         Procedure proc = Procedure(*($2.str), compiler.getAsmGenerator().getLabelManager().createLabel(*($2.str)));
         compiler.getProcManager().addProcedure(proc);
         compiler.getAsmGenerator().createProcedure(proc);
@@ -136,6 +131,8 @@ proc_name:
 proc_call:
     proc_called_name YY_L_BRACKET args YY_R_BRACKET
     {
+        compiler.assertProcCallArgCount(calledProcedureName, argsCounter, yylval.ptoken.line);
+
         Procedure proc = compiler.getProcManager().getProcedure(calledProcedureName);
         compiler.getAsmGenerator().callProcedure(proc);
     }
@@ -144,6 +141,9 @@ proc_call:
 proc_called_name:
     YY_PIDENTIFIER
     {
+        compiler.assertProcedureDeclaration(*($1.str), yylval.ptoken.line);
+        compiler.assertProcedureRecursion(*($1.str), yylval.ptoken.line);
+
         argsCounter = 0;
         calledProcedureName = *($1.str);
 
@@ -186,14 +186,12 @@ command:
     {
         Lvalue* lval = dynamic_cast<Lvalue*>($1);
 
-        // in RetVal Register we have value from expression, so just store it
         Register& retval = Architecture::getRetValRegister();
 
         compiler.getAsmGenerator().store(*lval, retval);
 
         retval.unlock();
 
-        // after assigment set init flag
         compiler.initVariable($1);
 
         delete $1;
@@ -230,6 +228,8 @@ command:
     }
     | YY_WRITE value YY_SEMICOLON
     {
+        compiler.assertInitalization($2, yylval.ptoken.line);
+
         compiler.getAsmGenerator().write(*$2);
         delete $2;
     }
@@ -330,6 +330,8 @@ repeat_until_end:
 declarations:
     declarations YY_COMMA YY_PIDENTIFIER
     {
+        compiler.assertRedeclaration(*($3.str), yylval.ptoken.line);
+
         Lvalue* var = new LvalueVar(*($3.str), true);
         compiler.getVarManager().declareVariable(var);
 
@@ -337,6 +339,8 @@ declarations:
     }
     | declarations YY_COMMA YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
+        compiler.assertRedeclaration(*($3.str), yylval.ptoken.line);
+
         Lvalue* var = new LvalueArray(*($3.str), $5.val);
         compiler.getVarManager().declareVariable(var);
 
@@ -344,6 +348,8 @@ declarations:
     }
     | YY_PIDENTIFIER
     {
+        compiler.assertRedeclaration(*($1.str), yylval.ptoken.line);
+
         Lvalue* var = new LvalueVar(*($1.str), true);
         compiler.getVarManager().declareVariable(var);
 
@@ -351,6 +357,8 @@ declarations:
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
+        compiler.assertRedeclaration(*($1.str), yylval.ptoken.line);
+
         Lvalue* var = new LvalueArray(*($1.str), $3.val);
         compiler.getVarManager().declareVariable(var);
 
@@ -361,6 +369,8 @@ declarations:
 args_decl:
     args_decl YY_COMMA YY_PIDENTIFIER
     {
+        compiler.assertRedeclaration(*($3.str), yylval.ptoken.line);
+
         Lvalue* var = new LvaluePointerVar(*($3.str), true);
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($3.str));
         compiler.getVarManager().declareVariable(var);
@@ -369,6 +379,8 @@ args_decl:
     }
     | args_decl YY_COMMA YY_TABLE YY_PIDENTIFIER
     {
+        compiler.assertRedeclaration(*($4.str), yylval.ptoken.line);
+
         Lvalue* var = new LvaluePointerArray(*($4.str));
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($4.str));
         compiler.getVarManager().declareVariable(var);
@@ -377,6 +389,8 @@ args_decl:
     }
     | YY_PIDENTIFIER
     {
+        compiler.assertRedeclaration(*($1.str), yylval.ptoken.line);
+
         Lvalue* var = new LvaluePointerVar(*($1.str), true);
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($1.str));
         compiler.getVarManager().declareVariable(var);
@@ -385,6 +399,8 @@ args_decl:
     }
     | YY_TABLE YY_PIDENTIFIER
     {
+        compiler.assertRedeclaration(*($2.str), yylval.ptoken.line);
+
         Lvalue* var = new LvaluePointerArray(*($2.str));
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($2.str));
         compiler.getVarManager().declareVariable(var);
@@ -396,7 +412,12 @@ args_decl:
 args:
     args YY_COMMA YY_PIDENTIFIER
     {
+        compiler.assertDeclaration(*($3.str), yylval.ptoken.line);
+
         Lvalue* lval = compiler.getVarManager().getVariable(*($3.str)).get();
+
+        compiler.assertProcCallArgType(calledProcedureName, argsCounter, lval->getType(), yylval.ptoken.line);
+
         Register& retval = Architecture::getRetValRegister();
         if (lval->getType() == Value::VALTYPE_LVALUE_VAR || lval->getType() == Value::VALTYPE_LVALUE_ARRAY)
             compiler.getAsmGenerator().load(retval, Rvalue(lval->getAddr()));
@@ -408,12 +429,19 @@ args:
             proc.getVarManager().getVariable(proc.getArgumentNames()[argsCounter]).get());
         argsCounter++;
         compiler.getAsmGenerator().storePointer(*pointer, retval);
+
+        compiler.initVariable(lval);
 
         delete $3.str;
     }
     | YY_PIDENTIFIER
     {
+        compiler.assertDeclaration(*($1.str), yylval.ptoken.line);
+
         Lvalue* lval = compiler.getVarManager().getVariable(*($1.str)).get();
+
+        compiler.assertProcCallArgType(calledProcedureName, argsCounter, lval->getType(), yylval.ptoken.line);
+
         Register& retval = Architecture::getRetValRegister();
         if (lval->getType() == Value::VALTYPE_LVALUE_VAR || lval->getType() == Value::VALTYPE_LVALUE_ARRAY)
             compiler.getAsmGenerator().load(retval, Rvalue(lval->getAddr()));
@@ -425,6 +453,8 @@ args:
             proc.getVarManager().getVariable(proc.getArgumentNames()[argsCounter]).get());
         argsCounter++;
         compiler.getAsmGenerator().storePointer(*pointer, retval);
+
+        compiler.initVariable(lval);
 
         delete $1.str;
     }
@@ -433,6 +463,8 @@ args:
 expression:
     value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+
         Register& retval = Architecture::getRetValRegister();
         retval.lock();
 
@@ -442,6 +474,9 @@ expression:
     }
     | value YY_ADD value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         compiler.getAsmGenerator().add(*$1, *$3);
 
         delete $1;
@@ -449,6 +484,9 @@ expression:
     }
     | value YY_SUB value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         compiler.getAsmGenerator().sub(*$3, *$1);
 
         delete $1;
@@ -456,6 +494,9 @@ expression:
     }
     | value YY_MUL value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         compiler.getAsmGenerator().mul(*$1, *$3);
 
         delete $1;
@@ -463,6 +504,9 @@ expression:
     }
     | value YY_DIV value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         compiler.getAsmGenerator().div(*$1, *$3);
 
         delete $1;
@@ -470,6 +514,9 @@ expression:
     }
     | value YY_MOD value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         compiler.getAsmGenerator().mod(*$1, *$3);
 
         delete $1;
@@ -480,6 +527,9 @@ expression:
 condition:
     value YY_EQ value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         ConditionalBranch branch = compiler.getAsmGenerator().branchEq(*$1, *$3);
         compiler.getBranchManager().addBranch(branch);
 
@@ -488,6 +538,9 @@ condition:
     }
     | value YY_NE value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         ConditionalBranch branch = compiler.getAsmGenerator().branchNeq(*$1, *$3);
         compiler.getBranchManager().addBranch(branch);
 
@@ -496,6 +549,9 @@ condition:
     }
     | value YY_LT value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         ConditionalBranch branch = compiler.getAsmGenerator().branchLt(*$1, *$3);
         compiler.getBranchManager().addBranch(branch);
 
@@ -504,6 +560,9 @@ condition:
     }
     | value YY_GT value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         ConditionalBranch branch = compiler.getAsmGenerator().branchGt(*$1, *$3);
         compiler.getBranchManager().addBranch(branch);
 
@@ -512,6 +571,9 @@ condition:
     }
     | value YY_LE value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         ConditionalBranch branch = compiler.getAsmGenerator().branchLeq(*$1, *$3);
         compiler.getBranchManager().addBranch(branch);
 
@@ -520,6 +582,9 @@ condition:
     }
     | value YY_GE value
     {
+        compiler.assertInitalization($1, yylval.ptoken.line);
+        compiler.assertInitalization($3, yylval.ptoken.line);
+
         ConditionalBranch branch = compiler.getAsmGenerator().branchGeq(*$1, *$3);
         compiler.getBranchManager().addBranch(branch);
 
@@ -542,7 +607,11 @@ value:
 identifier:
     YY_PIDENTIFIER
     {
+        compiler.assertDeclaration(*($1.str), yylval.ptoken.line);
+        compiler.assertUsage(*($1.str), Value::VALTYPE_LVALUE_VAR, yylval.ptoken.line);
+
         Lvalue* var = compiler.getVarManager().getVariable(*($1.str)).get();
+
         if (var->getType() == Value::VALTYPE_LVALUE_VAR)
             $$ = new LvalueVar(*(dynamic_cast<LvalueVar*>(var)));
         else
@@ -552,6 +621,9 @@ identifier:
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_NUM YY_R_SQUARE_BRACKET
     {
+        compiler.assertDeclaration(*($1.str), yylval.ptoken.line);
+        compiler.assertUsage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, yylval.ptoken.line);
+
         Lvalue *array = compiler.getVarManager().getVariable(*($1.str)).get();
         Lvalue *forward;
         if (array->getType() == Value::VALTYPE_LVALUE_ARRAY) {
@@ -570,15 +642,27 @@ identifier:
     }
     | YY_PIDENTIFIER YY_L_SQUARE_BRACKET YY_PIDENTIFIER YY_R_SQUARE_BRACKET
     {
+        compiler.assertDeclaration(*($1.str), yylval.ptoken.line);
+        compiler.assertUsage(*($1.str), Value::VALTYPE_LVALUE_ARRAY, yylval.ptoken.line);
+
+        compiler.assertDeclaration(*($3.str), yylval.ptoken.line);
+        compiler.assertUsage(*($3.str), Value::VALTYPE_LVALUE_VAR, yylval.ptoken.line);
+
         Lvalue *array = compiler.getVarManager().getVariable(*($1.str)).get();
         Lvalue *forward;
         if (array->getType() == Value::VALTYPE_LVALUE_ARRAY) {
             forward =  new LvalueArray(*dynamic_cast<LvalueArray*>(array));
             auto var = compiler.getVarManager().getVariable(*($3.str));
+
+            compiler.assertInitalization(var.get(), yylval.ptoken.line);
+
             dynamic_cast<LvalueArray*>(forward)->setAccessElement(var);
         } else {
             forward = new LvaluePointerArray(*dynamic_cast<LvaluePointerArray*>(array));
             auto var = compiler.getVarManager().getVariable(*($3.str));
+
+            compiler.assertInitalization(var.get(), yylval.ptoken.line);
+
             dynamic_cast<LvaluePointerArray*>(forward)->setAccessElement(var);
         }
 

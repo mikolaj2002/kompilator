@@ -41,8 +41,17 @@ class Compiler {
     void assertRedeclaration(const std::string& name, uint64_t line);
     void assertUsage(const std::string& name, Value::valtype_t type,
                      uint64_t line);
+    void assertProcedureDeclaration(const std::string& name, uint64_t line);
+    void assertProcedureRedeclaration(const std::string& name, uint64_t line);
+    void assertProcedureRecursion(const std::string& name, uint64_t line);
+    void assertProcCallArgCount(const std::string& name, size_t givenArguments,
+                                uint64_t line);
+    void assertProcCallArgType(const std::string& name, size_t argNumber,
+                               Value::valtype_t type, uint64_t line);
     void assertInitalization(Value* val, uint64_t line);
-    void assertMutuable(Value* val, uint64_t line);
+
+    void assertMutuable(Value* val,
+                        uint64_t line);  // TODO: remove mutuable everywhere
 
     void initVariable(Value* val);
 };
