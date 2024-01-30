@@ -1,1 +1,1 @@
-[COMPILER] Incorrect usage of array c in line 6
+[COMPILER] Error: Incorrect usage of array c in line 6

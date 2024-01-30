@@ -1,1 +1,1 @@
-[COMPILER] Undeclared variable e in line 6
+[COMPILER] Error: Undeclared variable e in line 6

@@ -36,6 +36,7 @@ class Compiler {
     ProcedureManager& getProcManager() { return procManager; }
 
     void error(const char* fmt, ...);
+    void warning(const char* fmt, ...);
 
     void assertDeclaration(const std::string& name, uint64_t line);
     void assertRedeclaration(const std::string& name, uint64_t line);
@@ -49,9 +50,6 @@ class Compiler {
     void assertProcCallArgType(const std::string& name, size_t argNumber,
                                Value::valtype_t type, uint64_t line);
     void assertInitalization(Value* val, uint64_t line);
-
-    void assertMutuable(Value* val,
-                        uint64_t line);  // TODO: remove mutuable everywhere
 
     void initVariable(Value* val);
 };

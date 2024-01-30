@@ -1,1 +1,1 @@
-[COMPILER] Undeclared procedure pb in line 14
+[COMPILER] Error: Undeclared procedure pb in line 14

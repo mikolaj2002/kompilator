@@ -1,1 +1,2 @@
-[COMPILER] Use of uninitialized variable d in line 7
+[COMPILER] Warning: Variable d might not be initialized, used in line 7
+[COMPILER] Warning: Variable d might not be initialized, used in line 7

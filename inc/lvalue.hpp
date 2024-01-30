@@ -7,13 +7,12 @@ class Lvalue : public Value {
    protected:
     std::string name;
     bool init;
-    bool mutuable;
     Architecture::addr_t addr;
 
    public:
     Lvalue();
-    Lvalue(const std::string& name, bool mutuable, Value::valtype_t type);
-    Lvalue(const std::string& name, bool mutuable, Value::valtype_t type,
+    Lvalue(const std::string& name, Value::valtype_t type);
+    Lvalue(const std::string& name, Value::valtype_t type,
            Architecture::addr_t addr);
     virtual ~Lvalue() = default;
     Lvalue(const Lvalue& from) = default;
@@ -23,7 +22,6 @@ class Lvalue : public Value {
 
     virtual const std::string& getName() const { return name; }
     virtual bool isInit() const { return init; }
-    virtual bool isMutuable() const { return mutuable; }
     virtual Architecture::addr_t getAddr() const { return addr; }
     virtual Architecture::addr_t getSize() const = 0;
 

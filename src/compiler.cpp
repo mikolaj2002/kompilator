@@ -16,17 +16,28 @@ void Compiler::error(const char* fmt, ...) {
     exit(1);
 }
 
+void Compiler::warning(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    vfprintf(stderr, fmt, args);
+
+    va_end(args);
+}
+
 void Compiler::assertDeclaration(const std::string& name, uint64_t line) {
     if (!getVarManager().isVariableDeclared(name))
-        this->error("[COMPILER] Undeclared variable %s in line %" PRIu64 "\n",
+        this->error("[COMPILER] Error: Undeclared variable %s in line %" PRIu64
+                    "\n",
                     name.c_str(), line);
 }
 
 void Compiler::assertRedeclaration(const std::string& name, uint64_t line) {
     if (getVarManager().isVariableDeclared(name))
-        this->error("[COMPILER] Redeclaration of variable %s in line %" PRIu64
-                    "\n",
-                    name.c_str(), line);
+        this->error(
+            "[COMPILER] Error: Redeclaration of variable %s in line %" PRIu64
+            "\n",
+            name.c_str(), line);
 }
 
 void Compiler::assertUsage(const std::string& name, Value::valtype_t type,
@@ -43,8 +54,9 @@ void Compiler::assertUsage(const std::string& name, Value::valtype_t type,
             lval->getType() == Value::VALTYPE_POINTER_ARRAY)
             typeStr = "array";
 
-        this->error("[COMPILER] Incorrect usage of %s %s in line %" PRIu64 "\n",
-                    typeStr.c_str(), name.c_str(), line);
+        this->error(
+            "[COMPILER] Error: Incorrect usage of %s %s in line %" PRIu64 "\n",
+            typeStr.c_str(), name.c_str(), line);
     }
 }
 
@@ -54,24 +66,9 @@ void Compiler::assertInitalization(Value* val, uint64_t line) {
                            .getVariable(dynamic_cast<Lvalue*>(val)->getName())
                            .get();
         if (!lval->isInit())
-            this->error(
-                "[COMPILER] Use of uninitialized variable %s in line %" PRIu64
-                "\n",
-                lval->getName().c_str(), line);
-    }
-}
-
-void Compiler::assertMutuable(Value* val, uint64_t line) {
-    // check if variable can be modyfied, Rval and Arrays cannot be by gramma
-    // rules, so there is no need to check it here
-    if (val->getType() == Value::VALTYPE_LVALUE_VAR) {
-        Lvalue* lval = getVarManager()
-                           .getVariable(dynamic_cast<Lvalue*>(val)->getName())
-                           .get();
-        if (!lval->isMutuable())
-            this->error(
-                "BLAD: Proba nadpisania zmiennej %s typu const w linii %" PRIu64
-                "\n",
+            this->warning(
+                "[COMPILER] Warning: Variable %s might not be initialized, "
+                "used in line %" PRIu64 "\n",
                 lval->getName().c_str(), line);
     }
 }
@@ -79,22 +76,25 @@ void Compiler::assertMutuable(Value* val, uint64_t line) {
 void Compiler::assertProcedureDeclaration(const std::string& name,
                                           uint64_t line) {
     if (!getProcManager().isProcedureDeclared(name))
-        this->error("[COMPILER] Undeclared procedure %s in line %" PRIu64 "\n",
+        this->error("[COMPILER] Error: Undeclared procedure %s in line %" PRIu64
+                    "\n",
                     name.c_str(), line);
 }
 
 void Compiler::assertProcedureRedeclaration(const std::string& name,
                                             uint64_t line) {
     if (getProcManager().isProcedureDeclared(name))
-        this->error("[COMPILER] Redeclaration of procedure %s in line %" PRIu64
-                    "\n",
-                    name.c_str(), line);
+        this->error(
+            "[COMPILER] Error: Redeclaration of procedure %s in line %" PRIu64
+            "\n",
+            name.c_str(), line);
 }
 
 void Compiler::assertProcedureRecursion(const std::string& name,
                                         uint64_t line) {
     if (getProcManager().getCurrentProcedure().getName() == name)
-        this->error("[COMPILER] Using recursion in line %" PRIu64 "\n", line);
+        this->error("[COMPILER] Error: Using recursion in line %" PRIu64 "\n",
+                    line);
 }
 
 void Compiler::assertProcCallArgCount(const std::string& name,
@@ -102,7 +102,8 @@ void Compiler::assertProcCallArgCount(const std::string& name,
     if (getProcManager().getProcedure(name).getArgumentNames().size() !=
         givenArguments)
         this->error(
-            "[COMPILER] Calling procedure %s with wrong number of arguments in "
+            "[COMPILER] Error: Calling procedure %s with wrong number of "
+            "arguments in "
             "line %" PRIu64 "\n",
             name.c_str(), line);
 }
@@ -112,7 +113,8 @@ void Compiler::assertProcCallArgType(const std::string& name, size_t argNumber,
 
     if (proc.getArgumentNames().size() < argNumber + 1)
         this->error(
-            "[COMPILER] Calling procedure %s with wrong number of arguments in "
+            "[COMPILER] Error: Calling procedure %s with wrong number of "
+            "arguments in "
             "line %" PRIu64 "\n",
             name.c_str(), line);
 
@@ -125,8 +127,8 @@ void Compiler::assertProcCallArgType(const std::string& name, size_t argNumber,
          type != Value::VALTYPE_LVALUE_ARRAY &&
          type != Value::VALTYPE_POINTER_ARRAY))
         this->error(
-            "[COMPILER] Incorrect procedure %s call parameter in line %" PRIu64
-            "\n",
+            "[COMPILER] Error: Incorrect procedure %s call parameter in line "
+            "%" PRIu64 "\n",
             name.c_str(), line);
 }
 

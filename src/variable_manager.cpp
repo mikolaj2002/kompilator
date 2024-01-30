@@ -3,10 +3,7 @@
 #include <variable_manager.hpp>
 
 void VariableManager::declareVariable(Lvalue* val) {
-    // Alloc memory
     val->setAddr(Architecture::alloc(val->getSize()));
-
-    // Declare variable
     variables[val->getName()] = std::shared_ptr<Lvalue>(val);
 }
 

@@ -51,14 +51,14 @@ std::string calledProcedureName;
     {
         uint64_t val;
         uint64_t line;
-        std::string* str; // Yacc needs pointer instead of class
+        std::string* str;
     } Parser_token;
 }
 
 %union
 {
     Parser_token ptoken;
-    Value* value; // abstract class
+    Value* value;
 }
 
 %token	YY_SEMICOLON YY_COMMA
@@ -332,7 +332,7 @@ declarations:
     {
         compiler.assertRedeclaration(*($3.str), yylval.ptoken.line);
 
-        Lvalue* var = new LvalueVar(*($3.str), true);
+        Lvalue* var = new LvalueVar(*($3.str));
         compiler.getVarManager().declareVariable(var);
 
         delete $3.str;
@@ -350,7 +350,7 @@ declarations:
     {
         compiler.assertRedeclaration(*($1.str), yylval.ptoken.line);
 
-        Lvalue* var = new LvalueVar(*($1.str), true);
+        Lvalue* var = new LvalueVar(*($1.str));
         compiler.getVarManager().declareVariable(var);
 
         delete $1.str;
@@ -371,7 +371,7 @@ args_decl:
     {
         compiler.assertRedeclaration(*($3.str), yylval.ptoken.line);
 
-        Lvalue* var = new LvaluePointerVar(*($3.str), true);
+        Lvalue* var = new LvaluePointerVar(*($3.str));
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($3.str));
         compiler.getVarManager().declareVariable(var);
 
@@ -391,7 +391,7 @@ args_decl:
     {
         compiler.assertRedeclaration(*($1.str), yylval.ptoken.line);
 
-        Lvalue* var = new LvaluePointerVar(*($1.str), true);
+        Lvalue* var = new LvaluePointerVar(*($1.str));
         compiler.getProcManager().getCurrentProcedure().getArgumentNames().push_back(*($1.str));
         compiler.getVarManager().declareVariable(var);
 
@@ -683,6 +683,10 @@ static void yyerror(const char* msg)
 int compile(const char* inFile, const char* outFile)
 {
     yyin = fopen(inFile, "r");
+    if (!yyin) {
+        std::cerr << "Error opening file " << inFile << std::endl;
+        return 1;
+    }
     const int ret = yyparse();
     fclose(yyin);
 

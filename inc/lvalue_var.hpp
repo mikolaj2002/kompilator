@@ -5,7 +5,7 @@
 
 class LvalueVar : public Lvalue {
    public:
-    LvalueVar(const std::string& name, bool isMutuable);
+    LvalueVar(const std::string& name);
     LvalueVar(const LvalueVar& var);
 
     Architecture::addr_t getSize() const override { return 1; }

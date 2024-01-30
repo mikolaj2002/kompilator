@@ -1,1 +1,1 @@
-[COMPILER] Redeclaration of variable a in line 5
+[COMPILER] Error: Redeclaration of variable a in line 5

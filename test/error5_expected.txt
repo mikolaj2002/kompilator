@@ -1,1 +1,1 @@
-[COMPILER] Incorrect procedure pa call parameter in line 14
+[COMPILER] Error: Incorrect procedure pa call parameter in line 14

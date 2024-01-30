@@ -1,1 +1,1 @@
-[COMPILER] Using recursion in line 7
+[COMPILER] Error: Using recursion in line 7
